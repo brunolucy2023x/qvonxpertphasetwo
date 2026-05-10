@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect } from "react";
 import { Job } from "@/types/types";
 import { useJobsContext } from "@/context/jobsContext";
@@ -18,38 +19,49 @@ interface JobProps {
 
 function MyJob({ job }: JobProps) {
   const { deleteJob, likeJob } = useJobsContext();
-  const { userProfile, isAuthenticated, getUserProfile } = useGlobalContext();
-  const [isLiked, setIsLiked] = React.useState(false);
+  const { userProfile, isAuthenticated, getUserProfile } =
+    useGlobalContext();
 
   const router = useRouter();
+
+  const [isLiked, setIsLiked] = React.useState(false);
+
+  const userId = userProfile?._id;
+
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_BASE_URL ||
+    "https://qvonxpert.com";
 
   const handleLike = (id: string) => {
     setIsLiked((prev) => !prev);
     likeJob(id);
   };
 
+  // SAFE FETCH PROFILE
   useEffect(() => {
-    if (isAuthenticated && job.createdBy._id) {
+    if (isAuthenticated && job?.createdBy?._id) {
       getUserProfile(job.createdBy._id);
     }
-  }, [isAuthenticated, job.createdBy._id]);
+  }, [isAuthenticated, job?.createdBy?._id]);
 
+  // SAFE LIKE STATE
   useEffect(() => {
-    if (userProfile?._id) {
-      setIsLiked(job.likes.includes(userProfile?._id));
+    if (userId && job?.likes) {
+      setIsLiked(job.likes.includes(userId));
     }
-  }, [job.likes, userProfile._id]);
+  }, [job?.likes, userId]);
 
   return (
     <div className="p-8 bg-white rounded-xl flex flex-col gap-5">
+      {/* HEADER */}
       <div className="flex justify-between">
         <div
           className="flex items-center space-x-4 mb-2 cursor-pointer"
           onClick={() => router.push(`/job/${job._id}`)}
         >
           <Image
-            alt={`logo`}
-            src={job.createdBy.profilePicture || "/user.png"}
+            alt="logo"
+            src={job.createdBy?.profilePicture || "/user.png"}
             width={48}
             height={48}
             className="rounded-full shadow-sm"
@@ -59,50 +71,65 @@ function MyJob({ job }: JobProps) {
             <CardTitle className="text-xl font-bold truncate">
               {job.title}
             </CardTitle>
+
             <p className="text-sm text-muted-foreground">
-              {job.createdBy.name}
+              {job.createdBy?.name || "Unknown"}
             </p>
           </div>
         </div>
+
+        {/* LIKE BUTTON */}
         <button
           className={`text-2xl ${
             isLiked ? "text-[#7263f3]" : "text-gray-400"
-          } `}
+          }`}
           onClick={() => {
-            isAuthenticated
-              ? handleLike(job._id)
-              : router.push("https://qvonxpert.com/login"); // updated for local dev
+            if (!isAuthenticated) {
+              router.push(`${baseUrl}/login`);
+              return;
+            }
+            handleLike(job._id);
           }}
         >
           {isLiked ? bookmark : bookmarkEmpty}
         </button>
       </div>
+
+      {/* META */}
       <div>
-        <p className="text-sm text-muted-foreground mb-2">{job.location}</p>
+        <p className="text-sm text-muted-foreground mb-2">
+          {job.location}
+        </p>
+
         <p className="text-sm text-muted-foreground mb-4">
           Posted {formatDates(job.createdAt)}
         </p>
 
         <div className="flex justify-between">
           <div>
+            {/* SKILLS */}
             <div className="flex flex-wrap gap-2 mb-4">
-              {job.skills.map((skill, index) => (
+              {job.skills?.map((skill, index) => (
                 <Badge key={index} variant="secondary">
                   {skill}
                 </Badge>
               ))}
             </div>
+
+            {/* TAGS */}
             <div className="flex flex-wrap gap-2 mb-4">
-              {job.tags.map((skill, index) => (
+              {job.tags?.map((tag, index) => (
                 <Badge key={index} variant="outline">
-                  {skill}
+                  {tag}
                 </Badge>
               ))}
             </div>
           </div>
-          {job.createdBy._id === userProfile?._id && (
+
+          {/* EDIT / DELETE */}
+          {job.createdBy?._id === userId && (
             <div className="self-end">
-              <Button variant="ghost" size="icon" className="text-gray-500">
+              <Button variant="ghost" size="icon">
                 <Pencil size={14} />
                 <span className="sr-only">Edit job</span>
               </Button>

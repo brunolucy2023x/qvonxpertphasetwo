@@ -4,20 +4,25 @@ import { useGlobalContext } from "@/context/globalContext";
 import { LogIn, UserPlus, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 import Profile from "./Profile";
 
 function Header() {
   const { isAuthenticated } = useGlobalContext();
   const pathname = usePathname();
+  const router = useRouter();
+
   const [scrolled, setScrolled] = React.useState(false);
 
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_BASE_URL ||
+    "https://qvonxpert.com";
+
   const handleLogin = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/login`;
+    router.push(`${baseUrl}/login`);
   };
 
-  // Expanded platform navigation links (not just jobs)
   const navLinks = [
     { href: "/findwork", label: "Opportunities" },
     { href: "/dashboard", label: "Workspace" },
@@ -36,22 +41,21 @@ function Header() {
         scrolled ? "bg-white/90 shadow-sm" : "bg-white/60"
       }`}
     >
-      {/* ================= BRAND ================= */}
-      <Link
-        href="/"
-        className="flex items-center gap-2 hover:opacity-80 transition"
-      >
+      {/* BRAND */}
+      <Link href="/" className="flex items-center gap-2">
         <Image src="/logo.svg" alt="logo" width={40} height={40} />
 
         <div className="flex flex-col leading-tight">
-          <h1 className="font-extrabold text-xl text-[#7263F3] tracking-tight">
+          <h1 className="font-extrabold text-xl text-[#7263F3]">
             QvonXpert
           </h1>
-          <span className="text-[10px] text-gray-500">Talent • Jobs • Growth</span>
+          <span className="text-[10px] text-gray-500">
+            Talent • Jobs • Growth
+          </span>
         </div>
       </Link>
 
-      {/* ================= SEARCH ================= */}
+      {/* SEARCH */}
       <div className="hidden lg:flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-xl text-sm text-gray-500 w-64">
         <Search className="w-4 h-4" />
         <input
@@ -60,7 +64,7 @@ function Header() {
         />
       </div>
 
-      {/* ================= NAVIGATION ================= */}
+      {/* NAV */}
       <nav className="hidden md:flex items-center gap-6">
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
@@ -69,7 +73,7 @@ function Header() {
             <Link
               key={link.href}
               href={link.href}
-              className={`relative px-3 py-2 text-sm font-medium transition-all duration-200 ${
+              className={`relative px-3 py-2 text-sm font-medium ${
                 isActive
                   ? "text-[#7263F3]"
                   : "text-gray-600 hover:text-[#7263F3]"
@@ -77,9 +81,8 @@ function Header() {
             >
               {link.label}
 
-              {/* Active underline */}
               <span
-                className={`absolute left-2 right-2 -bottom-1 h-[2px] rounded-full transition-all duration-300 ${
+                className={`absolute left-2 right-2 -bottom-1 h-[2px] rounded-full ${
                   isActive ? "bg-[#7263F3]" : "bg-transparent"
                 }`}
               />
@@ -88,7 +91,7 @@ function Header() {
         })}
       </nav>
 
-      {/* ================= ACTIONS ================= */}
+      {/* ACTIONS */}
       <div className="flex items-center gap-3">
         {isAuthenticated ? (
           <Profile />
@@ -96,7 +99,7 @@ function Header() {
           <>
             <button
               onClick={handleLogin}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-[#7263F3] transition"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-[#7263F3]"
             >
               <LogIn className="w-4 h-4" />
               Sign In
@@ -104,7 +107,7 @@ function Header() {
 
             <button
               onClick={handleLogin}
-              className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold bg-[#7263F3] text-white shadow-sm hover:shadow-md hover:bg-[#5f52d9] transition-all duration-200"
+              className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold bg-[#7263F3] text-white"
             >
               <UserPlus className="w-4 h-4" />
               Join Platform

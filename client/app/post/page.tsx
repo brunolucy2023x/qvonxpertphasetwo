@@ -1,17 +1,22 @@
 "use client";
+
 import Header from "@/Components/Header";
 import JobForm from "@/Components/JobPost/JobForm";
 import { useGlobalContext } from "@/context/globalContext";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 
-function page() {
+function Page() {
   const { isAuthenticated, loading } = useGlobalContext();
   const router = useRouter();
 
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_BASE_URL ||
+    "https://qvonxpert.com";
+
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.push("https://qvonxpert.com/login"); // Updated for local dev
+      router.push(`${baseUrl}/login`);
     }
   }, [isAuthenticated, loading, router]);
 
@@ -30,4 +35,4 @@ function page() {
   );
 }
 
-export default page;
+export default Page;

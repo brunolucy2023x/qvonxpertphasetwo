@@ -1,4 +1,5 @@
 "use client";
+
 import { useGlobalContext } from "@/context/globalContext";
 import { useJobsContext } from "@/context/jobsContext";
 import { Job } from "@/types/types";
@@ -19,7 +20,12 @@ interface JobProps {
 function JobCard({ job, activeJob }: JobProps) {
   const { likeJob } = useJobsContext();
   const { userProfile, isAuthenticated } = useGlobalContext();
+
+  const router = useRouter();
+
   const [isLiked, setIsLiked] = React.useState(false);
+
+  const userId = userProfile?._id;
 
   const {
     title,
@@ -29,11 +35,14 @@ function JobCard({ job, activeJob }: JobProps) {
     applicants,
     jobType,
     createdAt,
+    likes,
   } = job;
 
-  const { name, profilePicture } = createdBy;
+  const { name, profilePicture } = createdBy || {};
 
-  const router = useRouter();
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_BASE_URL ||
+    "https://qvonxpert.com";
 
   const handleLike = (id: string) => {
     setIsLiked((prev) => !prev);
@@ -41,8 +50,10 @@ function JobCard({ job, activeJob }: JobProps) {
   };
 
   useEffect(() => {
-    setIsLiked(job.likes.includes(userProfile._id));
-  }, [job.likes, userProfile._id]);
+    if (likes && userId) {
+      setIsLiked(likes.includes(userId));
+    }
+  }, [likes, userId]);
 
   const companyDescription =
     "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut purus eget nunc.";
@@ -64,13 +75,13 @@ function JobCard({ job, activeJob }: JobProps) {
 
   return (
     <div
-      className={`p-8 rounded-xl flex flex-col gap-5
-    ${
-      activeJob
-        ? "bg-gray-50 shadow-md border-b-2 border-[#7263f3]"
-        : "bg-white"
-    }`}
+      className={`p-8 rounded-xl flex flex-col gap-5 ${
+        activeJob
+          ? "bg-gray-50 shadow-md border-b-2 border-[#7263f3]"
+          : "bg-white"
+      }`}
     >
+      {/* HEADER */}
       <div className="flex justify-between">
         <div
           className="group flex gap-1 items-center cursor-pointer"
@@ -87,30 +98,37 @@ function JobCard({ job, activeJob }: JobProps) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <h4 className="group-hover:underline font-bold">{title}</h4>
+            <h4 className="group-hover:underline font-bold">
+              {title}
+            </h4>
+
             <p className="text-xs">
-              {name}: {applicants.length}{" "}
-              {applicants.length > 1 ? "Applicants" : "Applicant"}
+              {name || "Company"}: {applicants?.length || 0}{" "}
+              {applicants?.length > 1 ? "Applicants" : "Applicant"}
             </p>
           </div>
         </div>
 
+        {/* LIKE BUTTON */}
         <button
           className={`text-2xl ${
             isLiked ? "text-[#7263f3]" : "text-gray-400"
-          } `}
+          }`}
           onClick={() => {
-            isAuthenticated
-              ? handleLike(job._id)
-              : router.push("https://qvonxpert.com/login"); // updated for local dev
+            if (!isAuthenticated) {
+              router.push(`${baseUrl}/login`);
+              return;
+            }
+            handleLike(job._id);
           }}
         >
           {isLiked ? bookmark : bookmarkEmpty}
         </button>
       </div>
 
+      {/* TAGS */}
       <div className="flex items-center gap-2">
-        {jobType.map((type, index) => (
+        {jobType?.map((type, index) => (
           <span
             key={index}
             className={`py-1 px-3 text-xs font-medium rounded-md border ${jobTypeBg(
@@ -122,6 +140,7 @@ function JobCard({ job, activeJob }: JobProps) {
         ))}
       </div>
 
+      {/* DESCRIPTION */}
       <p>
         {companyDescription.length > 100
           ? `${companyDescription.substring(0, 100)}...`
@@ -130,9 +149,13 @@ function JobCard({ job, activeJob }: JobProps) {
 
       <Separator />
 
+      {/* FOOTER */}
       <div className="flex justify-between items-center gap-6">
         <p>
-          <span className="font-bold">{formatMoney(salary, "GBP")}</span>
+          <span className="font-bold">
+            {formatMoney(salary, "GBP")}
+          </span>
+
           <span className="font-medium text-gray-400 text-lg">
             /
             {salaryType === "Yearly"
@@ -146,9 +169,7 @@ function JobCard({ job, activeJob }: JobProps) {
         </p>
 
         <p className="flex items-center gap-2 text-sm text-gray-400">
-          <span className="text-lg">
-            <Calendar size={16} />
-          </span>
+          <Calendar size={16} />
           Posted: {formatDates(createdAt)}
         </p>
       </div>
