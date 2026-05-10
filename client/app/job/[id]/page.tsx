@@ -100,7 +100,7 @@ function page() {
                 onClick={() => {
                   isAuthenticated
                     ? handleLike(job._id)
-                    : router.push("http://localhost:3000/login");
+                    : router.push("https://qvonxpert.com/login");
                 }}
               >
                 {isLiked ? bookmark : bookmarkEmpty}
@@ -176,7 +176,7 @@ function page() {
                   toast.error("You have already applied to this job");
                 }
               } else {
-                router.push("http://localhost:3000/login");
+                router.push("https://qvonxpert.com/login");
               }
             }}
           >

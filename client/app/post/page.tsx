@@ -11,7 +11,7 @@ function page() {
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.push("http://localhost:3000/login"); // Updated for local dev
+      router.push("https://qvonxpert.com/login"); // Updated for local dev
     }
   }, [isAuthenticated, loading, router]);
 

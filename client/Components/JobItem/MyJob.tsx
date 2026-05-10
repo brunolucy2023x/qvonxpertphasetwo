@@ -71,7 +71,7 @@ function MyJob({ job }: JobProps) {
           onClick={() => {
             isAuthenticated
               ? handleLike(job._id)
-              : router.push("http://localhost:3000/login"); // updated for local dev
+              : router.push("https://qvonxpert.com/login"); // updated for local dev
           }}
         >
           {isLiked ? bookmark : bookmarkEmpty}

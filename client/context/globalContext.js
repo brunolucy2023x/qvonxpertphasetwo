@@ -9,7 +9,7 @@ import axios from "axios";
 const GlobalContext = createContext();
 
 // ✅ Updated base URL to localhost for development
-axios.defaults.baseURL = "http://localhost:3000"; 
+axios.defaults.baseURL = "https://qvonxpert.com"; 
 axios.defaults.withCredentials = true;
 
 export const GlobalContextProvider = ({ children }) => {

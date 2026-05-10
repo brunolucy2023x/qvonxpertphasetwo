@@ -8,7 +8,7 @@ const JobsContext = createContext();
 
 // Use environment variable for base URL
 axios.defaults.baseURL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+  process.env.NEXT_PUBLIC_API_URL || "https://qvonxpert.com";
 axios.defaults.withCredentials = true;
 
 export const JobsContextProvider = ({ children }) => {

@@ -53,7 +53,7 @@ function Profile() {
         <DropdownMenuItem
           className="cursor-pointer"
           onClick={() => {
-            router.push("http://localhost:3000/logout"); // Updated for local dev
+            router.push("https://qvonxpert.com/logout"); // Updated for local dev
           }}
         >
           <LogOut className="mr-2 h-4 w-4" />
