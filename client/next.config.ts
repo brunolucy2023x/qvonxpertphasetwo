@@ -1,12 +1,23 @@
 // next.config.ts
-import { NextConfig } from 'next';
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: [
-      's.gravatar.com',      // Gravatar
-      'cdn.auth0.com',       // Auth0 avatars
-      'your-other-host.com', // any other hosts you might use
+    unoptimized: true,
+
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "s.gravatar.com",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.auth0.com",
+      },
+      {
+        protocol: "https",
+        hostname: "your-other-host.com",
+      },
     ],
   },
 };
