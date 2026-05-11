@@ -7,14 +7,27 @@ import connect from "./db/connect.js";
 import fs from "fs";
 import path from "path";
 import User from "./models/UserModel.js";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
 const app = express();
 const isProduction = process.env.NODE_ENV === "production";
 
-const CLIENT_URL = process.env.CLIENT_URL || "https://qvonxpert.com";
-const BASE_URL = process.env.BASE_URL || "https://qvonxpert.com";
+// FIX: needed for ESM path resolution
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// =========================
+// ENV VARIABLES (SAFE)
+// =========================
+const CLIENT_URL = process.env.CLIENT_URL;
+const BASE_URL = process.env.BASE_URL;
+
+// =========================
+// TRUST PROXY (IMPORTANT FOR AUTH0)
+// =========================
+app.set("trust proxy", 1);
 
 // =========================
 // AUTH0 CONFIG
@@ -54,7 +67,14 @@ app.use(cookieParser());
 app.use(auth(config));
 
 // =========================
-// DB USER CHECK
+// TEST ROUTE
+// =========================
+app.get("/test", (req, res) => {
+  res.json({ status: "Backend is working 🚀" });
+});
+
+// =========================
+// USER CREATION
 // =========================
 const ensureUserInDB = async (user) => {
   if (!user?.sub) return;
@@ -75,14 +95,7 @@ const ensureUserInDB = async (user) => {
 };
 
 // =========================
-// TEST ROUTE
-// =========================
-app.get("/test", (req, res) => {
-  res.json({ status: "Backend working 🚀" });
-});
-
-// =========================
-// HOME
+// HOME ROUTE
 // =========================
 app.get("/", async (req, res) => {
   if (req.oidc.isAuthenticated()) {
@@ -94,10 +107,10 @@ app.get("/", async (req, res) => {
 });
 
 // =========================
-// SAFE ROUTE LOADER (FIXED)
+// FIXED ROUTE LOADER (SAFE + RELIABLE)
 // =========================
 const loadRoutes = async () => {
-  const routesDir = path.resolve("./routes");
+  const routesDir = path.join(__dirname, "routes");
 
   if (!fs.existsSync(routesDir)) {
     console.log("❌ Routes folder not found");
@@ -108,20 +121,23 @@ const loadRoutes = async () => {
 
   for (const file of files) {
     try {
-      const route = await import(path.join(routesDir, file));
+      const routePath = path.join(routesDir, file);
+      const route = await import(routePath);
 
       if (route.default) {
         app.use("/api/v1", route.default);
-        console.log("✅ Loaded route:", file);
+        console.log(`✅ Route loaded: ${file}`);
+      } else {
+        console.log(`⚠️ No default export in: ${file}`);
       }
     } catch (err) {
-      console.error("❌ Failed loading route:", file, err.message);
+      console.error(`❌ Failed loading route ${file}:`, err.message);
     }
   }
 };
 
 // =========================
-// START SERVER (FIXED ORDER)
+// START SERVER (ORDER FIXED)
 // =========================
 const startServer = async () => {
   try {
@@ -129,7 +145,7 @@ const startServer = async () => {
     console.log("✅ MongoDB connected");
 
     await loadRoutes();
-    console.log("✅ Routes loaded");
+    console.log("✅ All routes loaded");
 
     const PORT = process.env.PORT || 5000;
 
