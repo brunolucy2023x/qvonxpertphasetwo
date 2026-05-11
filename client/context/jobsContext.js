@@ -3,20 +3,19 @@ import { useGlobalContext } from "./globalContext";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase"; // ✅ SUPABASE ADDED
 
 const JobsContext = createContext();
 
 // =========================
-// API CONFIG (HARDENED)
+// API CONFIG (EXISTING BACKEND)
 // =========================
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// HARD FAIL (so you immediately see issue instead of silent bugs)
 if (!API_BASE_URL) {
   throw new Error("❌ NEXT_PUBLIC_API_URL is missing in .env.local");
 }
 
-// Axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
@@ -29,8 +28,17 @@ export const JobsContextProvider = ({ children }) => {
   const { userProfile } = useGlobalContext();
   const router = useRouter();
 
+  // =========================
+  // EXISTING STATE (MONGO)
+  // =========================
   const [jobs, setJobs] = useState([]);
   const [userJobs, setUserJobs] = useState([]);
+
+  // =========================
+  // NEW STATE (SUPABASE)
+  // =========================
+  const [supabaseJobs, setSupabaseJobs] = useState([]);
+
   const [loadingJobs, setLoadingJobs] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState({
@@ -54,7 +62,7 @@ export const JobsContextProvider = ({ children }) => {
   const [maxSalary, setMaxSalary] = useState(120000);
 
   // =========================
-  // GET ALL JOBS
+  // GET JOBS (MONGO)
   // =========================
   const getJobs = async () => {
     setLoadingJobs(true);
@@ -63,14 +71,35 @@ export const JobsContextProvider = ({ children }) => {
       setJobs(res.data);
     } catch (error) {
       console.log("Error getting jobs", error);
-      toast.error(error?.response?.data?.message || "Failed to fetch jobs");
+      toast.error("Failed to fetch jobs");
     } finally {
       setLoadingJobs(false);
     }
   };
 
   // =========================
-  // USER JOBS
+  // GET JOBS (SUPABASE)
+  // =========================
+  const getSupabaseJobs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("jobs")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.log("Supabase error:", error);
+        return;
+      }
+
+      setSupabaseJobs(data || []);
+    } catch (err) {
+      console.log("Supabase fetch error:", err);
+    }
+  };
+
+  // =========================
+  // USER JOBS (MONGO)
   // =========================
   const getUserJobs = async (userId) => {
     if (!userId) return;
@@ -88,7 +117,7 @@ export const JobsContextProvider = ({ children }) => {
   };
 
   // =========================
-  // CREATE JOB
+  // CREATE JOB (MONGO)
   // =========================
   const createJob = async (jobData) => {
     try {
@@ -105,12 +134,12 @@ export const JobsContextProvider = ({ children }) => {
       router.push(`/job/${res.data._id}`);
     } catch (error) {
       console.log("Error creating job", error);
-      toast.error(error?.response?.data?.message || "Failed to create job");
+      toast.error("Failed to create job");
     }
   };
 
   // =========================
-  // SEARCH JOBS
+  // SEARCH JOBS (MONGO)
   // =========================
   const searchJobs = async (tags, location, title) => {
     setLoadingJobs(true);
@@ -133,7 +162,7 @@ export const JobsContextProvider = ({ children }) => {
   };
 
   // =========================
-  // JOB BY ID
+  // GET JOB BY ID (MONGO)
   // =========================
   const getJobById = async (id) => {
     if (!id) return null;
@@ -153,7 +182,7 @@ export const JobsContextProvider = ({ children }) => {
   };
 
   // =========================
-  // LIKE JOB
+  // LIKE JOB (MONGO)
   // =========================
   const likeJob = async (jobId) => {
     if (!jobId) return;
@@ -169,7 +198,7 @@ export const JobsContextProvider = ({ children }) => {
   };
 
   // =========================
-  // APPLY JOB
+  // APPLY JOB (MONGO)
   // =========================
   const applyToJob = async (jobId) => {
     if (!jobId || !userProfile?._id) return;
@@ -187,12 +216,12 @@ export const JobsContextProvider = ({ children }) => {
       await getJobs();
     } catch (error) {
       console.log("Error applying", error);
-      toast.error(error?.response?.data?.message || "Failed to apply");
+      toast.error("Failed to apply");
     }
   };
 
   // =========================
-  // DELETE JOB
+  // DELETE JOB (MONGO)
   // =========================
   const deleteJob = async (jobId) => {
     if (!jobId) return;
@@ -229,6 +258,7 @@ export const JobsContextProvider = ({ children }) => {
   // =========================
   useEffect(() => {
     getJobs();
+    getSupabaseJobs(); // ✅ NEW
 
     if (userProfile?._id) {
       getUserJobs(userProfile._id);
@@ -238,15 +268,22 @@ export const JobsContextProvider = ({ children }) => {
   return (
     <JobsContext.Provider
       value={{
+        // MONGO
         jobs,
-        loading: loadingJobs,
-        createJob,
         userJobs,
+
+        // SUPABASE
+        supabaseJobs,
+
+        loading: loadingJobs,
+
+        createJob,
         searchJobs,
         getJobById,
         likeJob,
         applyToJob,
         deleteJob,
+
         searchQuery,
         setSearchQuery,
         handleSearchChange,

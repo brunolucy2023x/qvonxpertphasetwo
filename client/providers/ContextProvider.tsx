@@ -1,7 +1,15 @@
 "use client";
+
 import React from "react";
 import { GlobalContextProvider } from "@/context/globalContext";
 import { JobsContextProvider } from "@/context/jobsContext";
+
+import { SupabaseJobsProvider } from "../supabaseJobsContext";
+
+
+
+
+
 
 interface Props {
   children: React.ReactNode;
@@ -10,7 +18,11 @@ interface Props {
 function ContextProvider({ children }: Props) {
   return (
     <GlobalContextProvider>
-      <JobsContextProvider>{children}</JobsContextProvider>
+      <JobsContextProvider>
+        <SupabaseJobsProvider>
+          {children}
+        </SupabaseJobsProvider>
+      </JobsContextProvider>
     </GlobalContextProvider>
   );
 }

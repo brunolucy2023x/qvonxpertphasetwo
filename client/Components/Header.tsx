@@ -1,11 +1,11 @@
 "use client";
 
+import React from "react";
 import { useGlobalContext } from "@/context/globalContext";
 import { LogIn, UserPlus, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import React from "react";
 import Profile from "./Profile";
 
 function Header() {
@@ -16,8 +16,7 @@ function Header() {
   const [scrolled, setScrolled] = React.useState(false);
 
   const baseUrl =
-    process.env.NEXT_PUBLIC_APP_BASE_URL ||
-    "https://qvonxpert.com";
+    process.env.NEXT_PUBLIC_APP_BASE_URL || "https://qvonxpert.com";
 
   const handleLogin = () => {
     router.push(`${baseUrl}/login`);
@@ -32,6 +31,7 @@ function Header() {
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll);
+
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
