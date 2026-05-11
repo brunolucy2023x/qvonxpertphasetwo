@@ -7,15 +7,16 @@ import { useRouter } from "next/navigation";
 const JobsContext = createContext();
 
 // =========================
-// CLEAN API CONFIG (FIXED)
+// API CONFIG (HARDENED)
 // =========================
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
+// HARD FAIL (so you immediately see issue instead of silent bugs)
 if (!API_BASE_URL) {
-  console.error("❌ NEXT_PUBLIC_API_URL is not set in .env");
+  throw new Error("❌ NEXT_PUBLIC_API_URL is missing in .env.local");
 }
 
-// Create axios instance (BEST PRACTICE)
+// Axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
@@ -62,18 +63,19 @@ export const JobsContextProvider = ({ children }) => {
       setJobs(res.data);
     } catch (error) {
       console.log("Error getting jobs", error);
-      toast.error("Failed to fetch jobs");
+      toast.error(error?.response?.data?.message || "Failed to fetch jobs");
     } finally {
       setLoadingJobs(false);
     }
   };
 
   // =========================
-  // GET USER JOBS
+  // USER JOBS
   // =========================
   const getUserJobs = async (userId) => {
     if (!userId) return;
     setLoadingJobs(true);
+
     try {
       const res = await api.get(`/api/v1/jobs/user/${userId}`);
       setUserJobs(res.data);
@@ -103,7 +105,7 @@ export const JobsContextProvider = ({ children }) => {
       router.push(`/job/${res.data._id}`);
     } catch (error) {
       console.log("Error creating job", error);
-      toast.error("Failed to create job");
+      toast.error(error?.response?.data?.message || "Failed to create job");
     }
   };
 
@@ -112,6 +114,7 @@ export const JobsContextProvider = ({ children }) => {
   // =========================
   const searchJobs = async (tags, location, title) => {
     setLoadingJobs(true);
+
     try {
       const query = new URLSearchParams();
 
@@ -130,11 +133,13 @@ export const JobsContextProvider = ({ children }) => {
   };
 
   // =========================
-  // GET JOB BY ID
+  // JOB BY ID
   // =========================
   const getJobById = async (id) => {
     if (!id) return null;
+
     setLoadingJobs(true);
+
     try {
       const res = await api.get(`/api/v1/jobs/${id}`);
       return res.data;
@@ -152,13 +157,14 @@ export const JobsContextProvider = ({ children }) => {
   // =========================
   const likeJob = async (jobId) => {
     if (!jobId) return;
+
     try {
       await api.put(`/api/v1/jobs/like/${jobId}`);
-      toast.success("Job liked successfully");
+      toast.success("Job updated");
       await getJobs();
     } catch (error) {
       console.log("Error liking job", error);
-      toast.error("Failed to like job");
+      toast.error("Failed to update like");
     }
   };
 
@@ -171,7 +177,7 @@ export const JobsContextProvider = ({ children }) => {
     const job = jobs.find((j) => j._id === jobId);
 
     if (job?.applicants?.includes(userProfile._id)) {
-      toast.error("You have already applied to this job");
+      toast.error("Already applied");
       return;
     }
 
@@ -180,7 +186,7 @@ export const JobsContextProvider = ({ children }) => {
       toast.success("Applied successfully");
       await getJobs();
     } catch (error) {
-      console.log("Error applying to job", error);
+      console.log("Error applying", error);
       toast.error(error?.response?.data?.message || "Failed to apply");
     }
   };
@@ -197,7 +203,7 @@ export const JobsContextProvider = ({ children }) => {
       setJobs((prev) => prev.filter((j) => j._id !== jobId));
       setUserJobs((prev) => prev.filter((j) => j._id !== jobId));
 
-      toast.success("Job deleted successfully");
+      toast.success("Deleted successfully");
     } catch (error) {
       console.log("Error deleting job", error);
       toast.error("Failed to delete job");
@@ -205,7 +211,7 @@ export const JobsContextProvider = ({ children }) => {
   };
 
   // =========================
-  // UI HELPERS
+  // HELPERS
   // =========================
   const handleSearchChange = (field, value) => {
     setSearchQuery((prev) => ({ ...prev, [field]: value }));
@@ -219,7 +225,7 @@ export const JobsContextProvider = ({ children }) => {
   };
 
   // =========================
-  // INITIAL LOAD
+  // INIT LOAD
   // =========================
   useEffect(() => {
     getJobs();
