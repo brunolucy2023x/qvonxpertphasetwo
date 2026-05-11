@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import connect from "./db/connect.js";
-import asyncHandler from "express-async-handler";
 import fs from "fs";
 import path from "path";
 import User from "./models/UserModel.js";
@@ -14,17 +13,11 @@ dotenv.config();
 const app = express();
 const isProduction = process.env.NODE_ENV === "production";
 
-// =========================
-// SAFE ENV FALLBACKS
-// =========================
-const CLIENT_URL =
-  process.env.CLIENT_URL || "https://qvonxpert.com";
-
-const BASE_URL =
-  process.env.BASE_URL || "https://qvonxpert.com";
+const CLIENT_URL = process.env.CLIENT_URL || "https://qvonxpert.com";
+const BASE_URL = process.env.BASE_URL || "https://qvonxpert.com";
 
 // =========================
-// Auth0 Configuration
+// AUTH0 CONFIG
 // =========================
 const config = {
   authRequired: false,
@@ -33,14 +26,9 @@ const config = {
   baseURL: BASE_URL,
   clientID: process.env.CLIENT_ID,
   issuerBaseURL: process.env.ISSUER_BASE_URL,
-
   routes: {
     postLogoutRedirect: CLIENT_URL,
-    callback: "/callback",
-    logout: "/logout",
-    login: "/login",
   },
-
   session: {
     absoluteDuration: 30 * 24 * 60 * 60 * 1000,
     cookie: {
@@ -57,8 +45,6 @@ app.use(
   cors({
     origin: CLIENT_URL,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
@@ -68,61 +54,82 @@ app.use(cookieParser());
 app.use(auth(config));
 
 // =========================
-// ENSURE USER IN DB
+// DB USER CHECK
 // =========================
-const ensureUserInDB = asyncHandler(async (user) => {
+const ensureUserInDB = async (user) => {
   if (!user?.sub) return;
 
-  const existingUser = await User.findOne({ auth0Id: user.sub });
+  const existing = await User.findOne({ auth0Id: user.sub });
 
-  if (!existingUser) {
+  if (!existing) {
     await User.create({
       auth0Id: user.sub,
       email: user.email,
       name: user.name,
-      role: "jobseeker",
       profilePicture: user.picture,
+      role: "jobseeker",
     });
 
-    console.log("✅ New user created:", user.email);
+    console.log("✅ User created:", user.email);
   }
+};
+
+// =========================
+// TEST ROUTE
+// =========================
+app.get("/test", (req, res) => {
+  res.json({ status: "Backend working 🚀" });
 });
 
 // =========================
-// ROUTES
+// HOME
 // =========================
 app.get("/", async (req, res) => {
   if (req.oidc.isAuthenticated()) {
     await ensureUserInDB(req.oidc.user);
-
-    // ✅ FIXED REDIRECT
     return res.redirect(`${CLIENT_URL}/dashboard`);
   }
 
-  return res.send("Logged out");
+  res.send("Logged out");
 });
 
 // =========================
-// SAFE ROUTE LOADING
+// SAFE ROUTE LOADER (FIXED)
 // =========================
-const routesDir = path.resolve("./routes");
+const loadRoutes = async () => {
+  const routesDir = path.resolve("./routes");
 
-if (fs.existsSync(routesDir)) {
-  fs.readdirSync(routesDir).forEach((file) => {
-    import(path.join(routesDir, file))
-      .then((route) => {
-        if (route.default) app.use("/api/v1", route.default);
-      })
-      .catch((err) => console.error("❌ Route error:", err));
-  });
-}
+  if (!fs.existsSync(routesDir)) {
+    console.log("❌ Routes folder not found");
+    return;
+  }
+
+  const files = fs.readdirSync(routesDir);
+
+  for (const file of files) {
+    try {
+      const route = await import(path.join(routesDir, file));
+
+      if (route.default) {
+        app.use("/api/v1", route.default);
+        console.log("✅ Loaded route:", file);
+      }
+    } catch (err) {
+      console.error("❌ Failed loading route:", file, err.message);
+    }
+  }
+};
 
 // =========================
-// START SERVER
+// START SERVER (FIXED ORDER)
 // =========================
 const startServer = async () => {
   try {
     await connect();
+    console.log("✅ MongoDB connected");
+
+    await loadRoutes();
+    console.log("✅ Routes loaded");
 
     const PORT = process.env.PORT || 5000;
 
@@ -130,7 +137,7 @@ const startServer = async () => {
       console.log(`🚀 Server running on PORT ${PORT}`);
     });
   } catch (error) {
-    console.error("❌ Server startup error:", error.message);
+    console.error("❌ Server error:", error.message);
     process.exit(1);
   }
 };
