@@ -26,7 +26,6 @@ function Page() {
   // =========================
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      // redirect to login with "redirect" back to this page
       const redirectUrl = encodeURIComponent(window.location.pathname);
       router.replace(`/login?redirect=${redirectUrl}`);
     }
@@ -96,10 +95,14 @@ function Page() {
         {/* ================= JOB LIST ================= */}
         <div className="my-8 grid grid-cols-1 md:grid-cols-2 gap-6">
           {activeTab === "posts" &&
-            userJobs?.map((job: Job) => <MyJob key={job.id || job._id} job={job} />)}
+            userJobs?.map((job: Job) => (
+              <MyJob key={job._id} job={job} />
+            ))}
 
           {activeTab === "likes" &&
-            likedJobs.map((job: Job) => <MyJob key={job.id || job._id} job={job} />)}
+            likedJobs.map((job: Job) => (
+              <MyJob key={job._id} job={job} />
+            ))}
         </div>
       </div>
 
