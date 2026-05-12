@@ -26,18 +26,17 @@ interface JobProps {
 
 function JobCard({ job, activeJob }: JobProps) {
   const router = useRouter();
-
   const { likeJob } = useJobsContext();
-
-  const { userProfile, isAuthenticated } =
-    useGlobalContext();
+  const { userProfile, isAuthenticated } = useGlobalContext();
 
   const [isLiked, setIsLiked] = useState(false);
+  const [loadingLike, setLoadingLike] = useState(false);
 
-  const [loadingLike, setLoadingLike] =
-    useState(false);
+  // ✅ SUPABASE USER ID (not _id)
+  const userId = userProfile?.auth0_id || userProfile?.id;
 
-  const userId = userProfile?._id;
+  // ✅ SUPABASE JOB ID
+  const jobId = job?.id || (job as any)?._id;
 
   const {
     title,
@@ -49,257 +48,153 @@ function JobCard({ job, activeJob }: JobProps) {
     createdAt,
   } = job;
 
-  const { name, profilePicture } = createdBy || {};
+  const baseUrl = process.env.NEXT_PUBLIC_APP_BASE_URL || "http://localhost:3000";
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_BASE_URL ||
-    "https://qvonxpert.com";
-
-  /**
-   * CHECK IF USER ALREADY LIKED JOB
-   * SUPABASE ONLY
-   * DOES NOT TOUCH MONGODB
-   */
+  // =========================
+  // CHECK LIKE STATUS (SUPABASE)
+  // =========================
   useEffect(() => {
     const fetchLikeStatus = async () => {
-      if (!userId || !job?._id) return;
+      if (!userId || !jobId) return;
 
-      try {
-        const { data, error } = await supabase
-          .from("job_likes")
-          .select("id")
-          .eq("job_id", job._id)
-          .eq("user_id", userId)
-          .maybeSingle();
+      const { data, error } = await supabase
+        .from("job_likes")
+        .select("id")
+        .eq("job_id", jobId)
+        .eq("user_id", userId)
+        .maybeSingle();
 
-        if (error) {
-          console.error(
-            "Supabase fetch like error:",
-            error
-          );
-
-          return;
-        }
-
-        setIsLiked(!!data);
-      } catch (error) {
-        console.error("Like status error:", error);
+      if (error) {
+        console.error("Like fetch error:", error.message);
+        return;
       }
+
+      setIsLiked(!!data);
     };
 
     fetchLikeStatus();
-  }, [job?._id, userId]);
+  }, [jobId, userId]);
 
-  /**
-   * HANDLE LIKE / UNLIKE
-   * SUPABASE + EXISTING DATABASE
-   */
-  const handleLike = async (jobId: string) => {
-    if (!userId || loadingLike) return;
+  // =========================
+  // LIKE / UNLIKE
+  // =========================
+  const handleLike = async () => {
+    if (!userId || !jobId || loadingLike) return;
+
+    if (!isAuthenticated) {
+      // Redirect to login and return to this job after login
+      router.push(`${baseUrl}/login?redirect=/job/${jobId}`);
+      return;
+    }
 
     try {
       setLoadingLike(true);
 
       if (isLiked) {
-        /**
-         * REMOVE LIKE FROM SUPABASE
-         */
         const { error } = await supabase
           .from("job_likes")
           .delete()
           .eq("job_id", jobId)
           .eq("user_id", userId);
 
-        if (error) {
-          console.error(
-            "Supabase unlike error:",
-            error
-          );
-
-          return;
-        }
+        if (error) throw error;
 
         setIsLiked(false);
       } else {
-        /**
-         * ADD LIKE TO SUPABASE
-         */
         const { error } = await supabase
           .from("job_likes")
-          .insert([
-            {
-              job_id: jobId,
-              user_id: userId,
-            },
-          ]);
+          .insert([{ job_id: jobId, user_id: userId }]);
 
-        if (error) {
-          console.error(
-            "Supabase like error:",
-            error
-          );
-
-          return;
-        }
+        if (error) throw error;
 
         setIsLiked(true);
       }
 
-      /**
-       * KEEP EXISTING MONGODB FUNCTIONALITY
-       * DOES NOT INTERFERE WITH CURRENT DATABASE
-       */
-      likeJob(jobId);
-    } catch (error) {
-      console.error("Handle like error:", error);
+      // Optional legacy sync (safe fallback)
+      likeJob?.(jobId);
+    } catch (error: any) {
+      console.error("Like error:", error.message);
     } finally {
       setLoadingLike(false);
     }
   };
 
-  const companyDescription =
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut purus eget nunc.";
+  const companyName = createdBy?.name || "Company";
+  const companyImage = createdBy?.profilePicture || "/user.png";
+  const companyDescription = "Modern job opportunity posted on QvonXpert marketplace.";
 
-  /**
-   * JOB TYPE STYLES
-   */
   const jobTypeBg = (type: string) => {
     switch (type) {
       case "Full Time":
-        return "bg-green-500/20 text-green-600 border-green-500/20";
-
+        return "bg-green-500/20 text-green-600";
       case "Part Time":
-        return "bg-purple-500/20 text-purple-600 border-purple-500/20";
-
+        return "bg-purple-500/20 text-purple-600";
       case "Contract":
-        return "bg-red-500/20 text-red-600 border-red-500/20";
-
+        return "bg-red-500/20 text-red-600";
       case "Internship":
-        return "bg-indigo-500/20 text-indigo-600 border-indigo-500/20";
-
+        return "bg-indigo-500/20 text-indigo-600";
       default:
-        return "bg-gray-500/20 text-gray-600 border-gray-500/20";
+        return "bg-gray-500/20 text-gray-600";
     }
   };
 
   return (
     <div
-      className={`p-8 rounded-xl flex flex-col gap-5 transition-all duration-300 ${
-        activeJob
-          ? "bg-gray-50 shadow-md border-b-2 border-[#7263f3]"
-          : "bg-white"
+      className={`p-8 rounded-xl flex flex-col gap-5 transition ${
+        activeJob ? "bg-gray-50 border-b-2 border-[#7263f3]" : "bg-white"
       }`}
     >
       {/* HEADER */}
-      <div className="flex justify-between items-start gap-4">
+      <div className="flex justify-between items-start">
         <div
-          className="group flex gap-3 items-center cursor-pointer"
-          onClick={() => router.push(`/job/${job._id}`)}
+          className="flex gap-3 items-center cursor-pointer"
+          onClick={() => router.push(`/job/${jobId}`)}
         >
-          {/* COMPANY IMAGE */}
-          <div className="w-12 h-12 bg-gray-200 rounded-md overflow-hidden flex items-center justify-center">
-            <Image
-              src={profilePicture || "/user.png"}
-              alt={name || "Company"}
-              width={40}
-              height={40}
-              className="rounded-md object-cover"
-            />
+          <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-200">
+            <Image src={companyImage} alt={companyName} width={40} height={40} />
           </div>
 
-          {/* JOB INFO */}
-          <div className="flex flex-col gap-1">
-            <h4 className="group-hover:underline font-bold text-sm md:text-base">
-              {title}
-            </h4>
-
+          <div>
+            <h4 className="font-bold text-sm md:text-base">{title}</h4>
             <p className="text-xs text-gray-500">
-              {name || "Company"} •{" "}
-              {applicants?.length || 0}{" "}
-              {applicants?.length === 1
-                ? "Applicant"
-                : "Applicants"}
+              {companyName} • {applicants?.length || 0} Applicants
             </p>
           </div>
         </div>
 
         {/* LIKE BUTTON */}
         <button
-          type="button"
           disabled={loadingLike}
-          className={`text-2xl transition-all duration-200 ${
-            isLiked
-              ? "text-[#7263f3]"
-              : "text-gray-400 hover:text-[#7263f3]"
-          } ${
-            loadingLike
-              ? "opacity-50 cursor-not-allowed"
-              : ""
-          }`}
-          onClick={() => {
-            if (!isAuthenticated) {
-              router.push(`${baseUrl}/login`);
-              return;
-            }
-
-            handleLike(job._id);
-          }}
+          onClick={handleLike}
+          className={`text-2xl ${isLiked ? "text-[#7263f3]" : "text-gray-400"}`}
         >
           {isLiked ? bookmark : bookmarkEmpty}
         </button>
       </div>
 
       {/* TAGS */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {jobType?.map((type, index) => (
-          <span
-            key={index}
-            className={`py-1 px-3 text-xs font-medium rounded-md border ${jobTypeBg(
-              type
-            )}`}
-          >
+      <div className="flex gap-2 flex-wrap">
+        {jobType?.map((type, i) => (
+          <span key={i} className={`px-3 py-1 text-xs rounded ${jobTypeBg(type)}`}>
             {type}
           </span>
         ))}
       </div>
 
       {/* DESCRIPTION */}
-      <p className="text-sm text-gray-600 leading-relaxed">
-        {companyDescription.length > 100
-          ? `${companyDescription.substring(
-              0,
-              100
-            )}...`
-          : companyDescription}
-      </p>
+      <p className="text-sm text-gray-600">{companyDescription}</p>
 
       <Separator />
 
       {/* FOOTER */}
-      <div className="flex justify-between items-center gap-6 flex-wrap">
-        {/* SALARY */}
-        <p>
-          <span className="font-bold text-base">
-            {formatMoney(salary, "GBP")}
-          </span>
-
-          <span className="font-medium text-gray-400 text-lg">
-            /
-            {salaryType === "Yearly"
-              ? "pa"
-              : salaryType === "Monthly"
-              ? "pcm"
-              : salaryType === "Weekly"
-              ? "pw"
-              : "ph"}
-          </span>
+      <div className="flex justify-between text-sm">
+        <p className="font-bold">
+          {formatMoney(salary, "GBP")} /{salaryType}
         </p>
 
-        {/* DATE */}
-        <p className="flex items-center gap-2 text-sm text-gray-400">
-          <Calendar size={16} />
-
-          Posted: {formatDates(createdAt)}
+        <p className="flex items-center gap-2 text-gray-400">
+          <Calendar size={14} />
+          {formatDates(createdAt)}
         </p>
       </div>
     </div>

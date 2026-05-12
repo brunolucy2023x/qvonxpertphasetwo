@@ -1,127 +1,204 @@
 "use client";
+
+import React, { useEffect, useState } from "react";
+import { X } from "lucide-react";
+
 import { useGlobalContext } from "@/context/globalContext";
-import React from "react";
+
 import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { X } from "lucide-react";
+
+import { supabase } from "@/lib/supabase";
+
+/* =========================
+   DEBOUNCE HOOK
+========================= */
+function useDebounce(value: any, delay: number) {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebounced(value);
+    }, delay);
+
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+
+  return debounced;
+}
 
 function JobSkills() {
-  const { skills, setSkills, tags, setTags } = useGlobalContext();
+  const { skills, setSkills, tags, setTags, userProfile } =
+    useGlobalContext();
 
-  const [newSkill, setNewSkill] = React.useState("");
-  const [newTag, setNewTag] = React.useState("");
+  const [newSkill, setNewSkill] = useState("");
+  const [newTag, setNewTag] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleAddSkill = () => {
-    if (newSkill.trim() && !skills.includes(newSkill.trim())) {
-      setSkills((prev: string) => [...prev, newSkill.trim()]);
-      setNewSkill("");
-    }
+  const debouncedSkills = useDebounce(skills, 500);
+  const debouncedTags = useDebounce(tags, 500);
+
+  /* =========================
+     LOAD FROM SUPABASE
+  ========================= */
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!userProfile?._id) return;
+
+      setLoading(true);
+
+      const { data, error } = await supabase
+        .from("user_job_preferences")
+        .select("*")
+        .eq("user_id", userProfile._id)
+        .maybeSingle();
+
+      if (error) {
+        console.error(error);
+        setLoading(false);
+        return;
+      }
+
+      if (data) {
+        setSkills(data.skills || []);
+        setTags(data.tags || []);
+      }
+
+      setLoading(false);
+    };
+
+    fetchData();
+  }, [userProfile?._id]);
+
+  /* =========================
+     SAVE (DEBOUNCED)
+  ========================= */
+  useEffect(() => {
+    const save = async () => {
+      if (!userProfile?._id) return;
+
+      const { error } = await supabase
+        .from("user_job_preferences")
+        .upsert(
+          [
+            {
+              user_id: userProfile._id,
+              skills: debouncedSkills || [],
+              tags: debouncedTags || [],
+              updated_at: new Date().toISOString(),
+            },
+          ],
+          { onConflict: "user_id" }
+        );
+
+      if (error) console.error(error);
+    };
+
+    save();
+  }, [debouncedSkills, debouncedTags, userProfile?._id]);
+
+  /* =========================
+     SKILL HANDLERS
+  ========================= */
+  const addSkill = () => {
+    const value = newSkill.trim();
+    if (!value || skills.includes(value)) return;
+
+    setSkills([...skills, value]);
+    setNewSkill("");
   };
 
-  const handleRemoveSkill = (skillToRemove: string) => {
-    setSkills(skills.filter((skill: string) => skill !== skillToRemove));
+  const removeSkill = (skill: string) => {
+    setSkills(skills.filter((s: string) => s !== skill));
   };
 
-  const handleAddTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      setTags((prev: string) => [...prev, newTag.trim()]);
-      setNewTag("");
-    }
+  /* =========================
+     TAG HANDLERS
+  ========================= */
+  const addTag = () => {
+    const value = newTag.trim();
+    if (!value || tags.includes(value)) return;
+
+    setTags([...tags, value]);
+    setNewTag("");
   };
 
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag: string) => tag !== tagToRemove));
+  const removeTag = (tag: string) => {
+    setTags(tags.filter((t: string) => t !== tag));
   };
 
   return (
-    <div className="p-6 flex flex-col gap-4 bg-background border border-border rounded-lg">
+    <div className="p-6 flex flex-col gap-6 bg-background border border-border rounded-lg">
+      {loading && (
+        <div className="text-sm text-gray-500">
+          Loading skills and tags...
+        </div>
+      )}
+
+      {/* ================= SKILLS ================= */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="flex-1">
+        <div>
           <h3 className="text-lg font-semibold">Skills</h3>
-          <Label
-            htmlFor="skills"
-            className="text-sm text-muted-foreground mt-2"
-          >
-            Add relevant skills for the job position.
+          <Label className="text-sm text-muted-foreground mt-2 block">
+            Add relevant skills
           </Label>
         </div>
 
-        <div className="flex-1 flex flex-col gap-2">
+        <div>
           <div className="flex gap-2">
             <Input
-              type="text"
-              id="skills"
               value={newSkill}
               onChange={(e) => setNewSkill(e.target.value)}
-              className="flex-1"
-              placeholder="Enter a skill"
+              placeholder="Enter skill"
             />
-
-            <Button type="button" onClick={handleAddSkill}>
-              Add Skill
-            </Button>
+            <Button onClick={addSkill}>Add</Button>
           </div>
 
-          <div className="flex flex-wrap gap-2 mt-2">
-            {skills.map((skill: string, index: number) => (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {skills.map((skill: string, i: number) => (
               <div
-                key={index}
-                className="bg-primary text-primary-foreground px-3 py-1 rounded-full flex items-center space-x-1"
+                key={i}
+                className="px-3 py-1 rounded-full bg-primary text-white flex items-center gap-2"
               >
-                <span>{skill}</span>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveSkill(skill)}
-                  className="text-primary-foreground hover:text-red-500 focus:outline-none"
-                >
-                  <X size={14} />
-                </button>
+                {skill}
+                <X size={14} onClick={() => removeSkill(skill)} />
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <Separator className="my-2" />
+      <Separator />
 
+      {/* ================= TAGS ================= */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="flex-1">
+        <div>
           <h3 className="text-lg font-semibold">Tags</h3>
-          <Label htmlFor="tags" className="text-sm text-muted-foreground mt-2">
-            Add relevant tags for the job position.
+          <Label className="text-sm text-muted-foreground mt-2 block">
+            Add relevant tags
           </Label>
         </div>
 
-        <div className="flex-1 flex flex-col gap-2">
+        <div>
           <div className="flex gap-2">
             <Input
-              type="text"
-              id="tags"
               value={newTag}
               onChange={(e) => setNewTag(e.target.value)}
-              className="flex-1"
-              placeholder="Enter a tag"
+              placeholder="Enter tag"
             />
-            <Button type="button" onClick={handleAddTag}>
-              Add Tag
-            </Button>
+            <Button onClick={addTag}>Add</Button>
           </div>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {tags.map((tag: string, index: number) => (
+
+          <div className="flex flex-wrap gap-2 mt-3">
+            {tags.map((tag: string, i: number) => (
               <div
-                key={index}
-                className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full flex items-center space-x-1"
+                key={i}
+                className="px-3 py-1 rounded-full bg-secondary flex items-center gap-2"
               >
-                <span>{tag}</span>
-                <button
-                  onClick={() => handleRemoveTag(tag)}
-                  className="text-secondary-foreground hover:text-red-500 focus:outline-none"
-                  aria-label={`Remove tag ${tag}`}
-                >
-                  <X size={14} />
-                </button>
+                {tag}
+                <X size={14} onClick={() => removeTag(tag)} />
               </div>
             ))}
           </div>

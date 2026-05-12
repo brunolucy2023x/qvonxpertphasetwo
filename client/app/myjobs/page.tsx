@@ -13,40 +13,50 @@ function Page() {
   const { userJobs, jobs } = useJobsContext();
   const { isAuthenticated, loading, userProfile } = useGlobalContext();
 
-  const [activeTab, setActiveTab] = React.useState("posts");
-
+  const [activeTab, setActiveTab] = React.useState<"posts" | "likes">("posts");
   const router = useRouter();
 
-  const userId = userProfile?._id;
+  // =========================
+  // SUPABASE USER ID
+  // =========================
+  const userId = userProfile?.auth0_id || userProfile?.id;
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_BASE_URL ||
-    "https://qvonxpert.com";
-
-  // AUTH GUARD (SAFE)
+  // =========================
+  // AUTH GUARD
+  // =========================
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.push(`${baseUrl}/login`);
+      // redirect to login with "redirect" back to this page
+      const redirectUrl = encodeURIComponent(window.location.pathname);
+      router.replace(`/login?redirect=${redirectUrl}`);
     }
   }, [isAuthenticated, loading, router]);
 
-  // SAFE FILTER (LIKED JOBS)
-  const likedJobs = jobs.filter((job: Job) => {
-    if (!userId) return false;
-    return job.likes?.includes(userId);
-  });
+  // =========================
+  // SUPABASE LIKED JOBS
+  // =========================
+  const likedJobs = React.useMemo(() => {
+    if (!userId) return [];
+    return (jobs || []).filter((job: Job) => job?.likes?.includes(userId));
+  }, [jobs, userId]);
 
-  if (loading) return null;
+  if (loading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Checking authentication...
+      </div>
+    );
+  }
 
   return (
     <div>
       <Header />
 
       <div className="mt-8 w-[90%] mx-auto flex flex-col">
-        {/* TABS */}
+        {/* ================= TABS ================= */}
         <div className="self-center flex items-center gap-6">
           <button
-            className={`border px-8 py-2 rounded-full font-medium ${
+            className={`border px-8 py-2 rounded-full font-medium transition ${
               activeTab === "posts"
                 ? "border-transparent bg-[#7263F3] text-white"
                 : "border-gray-400"
@@ -57,7 +67,7 @@ function Page() {
           </button>
 
           <button
-            className={`border px-8 py-2 rounded-full font-medium ${
+            className={`border px-8 py-2 rounded-full font-medium transition ${
               activeTab === "likes"
                 ? "border-transparent bg-[#7263F3] text-white"
                 : "border-gray-400"
@@ -68,30 +78,28 @@ function Page() {
           </button>
         </div>
 
-        {/* EMPTY STATES */}
-        {activeTab === "posts" && userJobs?.length === 0 && (
-          <div className="mt-8">
+        {/* ================= EMPTY STATES ================= */}
+        {activeTab === "posts" && (!userJobs || userJobs.length === 0) && (
+          <div className="mt-8 text-center">
             <p className="text-2xl font-bold">No job posts found.</p>
+            <p className="text-gray-500">Create your first job on Supabase.</p>
           </div>
         )}
 
         {activeTab === "likes" && likedJobs.length === 0 && (
-          <div className="mt-8">
+          <div className="mt-8 text-center">
             <p className="text-2xl font-bold">No liked jobs found.</p>
+            <p className="text-gray-500">Start exploring jobs.</p>
           </div>
         )}
 
-        {/* JOB LIST */}
-        <div className="my-8 grid grid-cols-2 gap-6">
+        {/* ================= JOB LIST ================= */}
+        <div className="my-8 grid grid-cols-1 md:grid-cols-2 gap-6">
           {activeTab === "posts" &&
-            userJobs?.map((job: Job) => (
-              <MyJob key={job._id} job={job} />
-            ))}
+            userJobs?.map((job: Job) => <MyJob key={job.id || job._id} job={job} />)}
 
           {activeTab === "likes" &&
-            likedJobs.map((job: Job) => (
-              <MyJob key={job._id} job={job} />
-            ))}
+            likedJobs.map((job: Job) => <MyJob key={job.id || job._id} job={job} />)}
         </div>
       </div>
 

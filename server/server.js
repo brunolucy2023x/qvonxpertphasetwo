@@ -3,31 +3,75 @@ import { auth } from "express-openid-connect";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import connect from "./db/connect.js";
 import fs from "fs";
 import path from "path";
-import User from "./models/UserModel.js";
 import { fileURLToPath } from "url";
+
+import connect from "./db/connect.js";
+import User from "./models/UserModel.js";
+
+// =========================
+// SUPABASE
+// =========================
+import { createClient } from "@supabase/supabase-js";
 
 dotenv.config();
 
 const app = express();
 const isProduction = process.env.NODE_ENV === "production";
 
-// FIX: needed for ESM path resolution
+// =========================
+// PATH FIX
+// =========================
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // =========================
-// ENV VARIABLES (SAFE)
+// ENV
 // =========================
-const CLIENT_URL = process.env.CLIENT_URL;
-const BASE_URL = process.env.BASE_URL;
+const CLIENT_URL =
+  process.env.CLIENT_URL ||
+  "http://localhost:3000";
+
+const BASE_URL =
+  process.env.BASE_URL ||
+  "http://localhost:5000";
 
 // =========================
-// TRUST PROXY (IMPORTANT FOR AUTH0)
+// SUPABASE INIT (FIXED)
+// =========================
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+// =========================
+// TRUST PROXY
 // =========================
 app.set("trust proxy", 1);
+
+// =========================
+// CORS (FIXED FOR YOUR ERROR)
+// =========================
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://qvonxpert.com",
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  })
+);
+
+app.options("*", cors());
+
+// =========================
+// MIDDLEWARE
+// =========================
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // =========================
 // AUTH0 CONFIG
@@ -35,9 +79,9 @@ app.set("trust proxy", 1);
 const config = {
   authRequired: false,
   auth0Logout: true,
-  secret: process.env.SECRET,
+  secret: process.env.AUTH0_SECRET || process.env.SECRET,
   baseURL: BASE_URL,
-  clientID: process.env.CLIENT_ID,
+  clientID: process.env.AUTH0_CLIENT_ID || process.env.CLIENT_ID,
   issuerBaseURL: process.env.ISSUER_BASE_URL,
   routes: {
     postLogoutRedirect: CLIENT_URL,
@@ -51,27 +95,31 @@ const config = {
   },
 };
 
-// =========================
-// MIDDLEWARE
-// =========================
-app.use(
-  cors({
-    origin: CLIENT_URL,
-    credentials: true,
-  })
-);
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 app.use(auth(config));
 
 // =========================
-// TEST ROUTE
+// SUPABASE SYNC USER
 // =========================
-app.get("/test", (req, res) => {
-  res.json({ status: "Backend is working 🚀" });
-});
+const syncUserToSupabase = async (user) => {
+  if (!user?.sub) return;
+
+  const { error } = await supabase.from("users").upsert(
+    [
+      {
+        auth0_id: user.sub,
+        email: user.email,
+        name: user.name,
+        avatar: user.picture,
+        updated_at: new Date().toISOString(),
+      },
+    ],
+    { onConflict: "auth0_id" }
+  );
+
+  if (error) {
+    console.error("❌ Supabase user sync error:", error.message);
+  }
+};
 
 // =========================
 // USER CREATION
@@ -79,7 +127,9 @@ app.get("/test", (req, res) => {
 const ensureUserInDB = async (user) => {
   if (!user?.sub) return;
 
-  const existing = await User.findOne({ auth0Id: user.sub });
+  const existing = await User.findOne({
+    auth0Id: user.sub,
+  });
 
   if (!existing) {
     await User.create({
@@ -90,9 +140,20 @@ const ensureUserInDB = async (user) => {
       role: "jobseeker",
     });
 
-    console.log("✅ User created:", user.email);
+    console.log("✅ Mongo user created:", user.email);
   }
+
+  await syncUserToSupabase(user);
 };
+
+// =========================
+// TEST ROUTE
+// =========================
+app.get("/test", (req, res) => {
+  res.json({
+    status: "Backend working 🚀",
+  });
+});
 
 // =========================
 // HOME ROUTE
@@ -100,20 +161,23 @@ const ensureUserInDB = async (user) => {
 app.get("/", async (req, res) => {
   if (req.oidc.isAuthenticated()) {
     await ensureUserInDB(req.oidc.user);
-    return res.redirect(`${CLIENT_URL}/dashboard`);
+
+    return res.redirect(
+      `${CLIENT_URL}/dashboard`
+    );
   }
 
   res.send("Logged out");
 });
 
 // =========================
-// FIXED ROUTE LOADER (SAFE + RELIABLE)
+// ROUTE LOADER (SAFE)
 // =========================
 const loadRoutes = async () => {
   const routesDir = path.join(__dirname, "routes");
 
   if (!fs.existsSync(routesDir)) {
-    console.log("❌ Routes folder not found");
+    console.log("❌ Routes folder missing");
     return;
   }
 
@@ -121,23 +185,25 @@ const loadRoutes = async () => {
 
   for (const file of files) {
     try {
-      const routePath = path.join(routesDir, file);
-      const route = await import(routePath);
+      const route = await import(
+        path.join(routesDir, file)
+      );
 
       if (route.default) {
         app.use("/api/v1", route.default);
-        console.log(`✅ Route loaded: ${file}`);
-      } else {
-        console.log(`⚠️ No default export in: ${file}`);
+        console.log(`✅ Loaded: ${file}`);
       }
     } catch (err) {
-      console.error(`❌ Failed loading route ${file}:`, err.message);
+      console.error(
+        `❌ Route error ${file}:`,
+        err.message
+      );
     }
   }
 };
 
 // =========================
-// START SERVER (ORDER FIXED)
+// START SERVER
 // =========================
 const startServer = async () => {
   try {
@@ -145,15 +211,21 @@ const startServer = async () => {
     console.log("✅ MongoDB connected");
 
     await loadRoutes();
-    console.log("✅ All routes loaded");
+    console.log("✅ Routes loaded");
 
-    const PORT = process.env.PORT || 5000;
+    const PORT =
+      process.env.PORT || 5000;
 
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on PORT ${PORT}`);
+      console.log(
+        `🚀 Server running on port ${PORT}`
+      );
     });
-  } catch (error) {
-    console.error("❌ Server error:", error.message);
+  } catch (err) {
+    console.error(
+      "❌ Server crash:",
+      err.message
+    );
     process.exit(1);
   }
 };

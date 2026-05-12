@@ -15,23 +15,24 @@ function Header() {
 
   const [scrolled, setScrolled] = React.useState(false);
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_BASE_URL || "https://qvonxpert.com";
-
+  /* ================= LOGIN ================= */
   const handleLogin = () => {
-    router.push(`${baseUrl}/login`);
+    // Redirect back to current page after login
+    const redirectUrl = encodeURIComponent(pathname);
+    router.push(`/login?redirect=${redirectUrl}`);
   };
 
+  /* ================= NAV LINKS ================= */
   const navLinks = [
     { href: "/findwork", label: "Opportunities" },
     { href: "/dashboard", label: "Workspace" },
     { href: "/post", label: "Publish" },
   ];
 
+  /* ================= SCROLL EFFECT ================= */
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll);
-
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -41,48 +42,36 @@ function Header() {
         scrolled ? "bg-white/90 shadow-sm" : "bg-white/60"
       }`}
     >
-      {/* BRAND */}
+      {/* ================= BRAND ================= */}
       <Link href="/" className="flex items-center gap-2">
         <Image src="/logo.svg" alt="logo" width={40} height={40} />
-
         <div className="flex flex-col leading-tight">
-          <h1 className="font-extrabold text-xl text-[#7263F3]">
-            QvonXpert
-          </h1>
-          <span className="text-[10px] text-gray-500">
-            Talent • Jobs • Growth
-          </span>
+          <h1 className="font-extrabold text-xl text-[#7263F3]">QvonXpert</h1>
+          <span className="text-[10px] text-gray-500">Talent • Jobs • Growth</span>
         </div>
       </Link>
 
-      {/* SEARCH */}
+      {/* ================= SEARCH ================= */}
       <div className="hidden lg:flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-xl text-sm text-gray-500 w-64">
         <Search className="w-4 h-4" />
-        <input
-          placeholder="Search talent or jobs..."
-          className="bg-transparent outline-none w-full"
-        />
+        <input placeholder="Search talent or jobs..." className="bg-transparent outline-none w-full" />
       </div>
 
-      {/* NAV */}
+      {/* ================= NAV ================= */}
       <nav className="hidden md:flex items-center gap-6">
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
-
           return (
             <Link
               key={link.href}
               href={link.href}
-              className={`relative px-3 py-2 text-sm font-medium ${
-                isActive
-                  ? "text-[#7263F3]"
-                  : "text-gray-600 hover:text-[#7263F3]"
+              className={`relative px-3 py-2 text-sm font-medium transition ${
+                isActive ? "text-[#7263F3]" : "text-gray-600 hover:text-[#7263F3]"
               }`}
             >
               {link.label}
-
               <span
-                className={`absolute left-2 right-2 -bottom-1 h-[2px] rounded-full ${
+                className={`absolute left-2 right-2 -bottom-1 h-[2px] rounded-full transition ${
                   isActive ? "bg-[#7263F3]" : "bg-transparent"
                 }`}
               />
@@ -91,7 +80,7 @@ function Header() {
         })}
       </nav>
 
-      {/* ACTIONS */}
+      {/* ================= ACTIONS ================= */}
       <div className="flex items-center gap-3">
         {isAuthenticated ? (
           <Profile />
@@ -107,7 +96,7 @@ function Header() {
 
             <button
               onClick={handleLogin}
-              className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold bg-[#7263F3] text-white"
+              className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold bg-[#7263F3] text-white hover:bg-[#5f52d9] transition"
             >
               <UserPlus className="w-4 h-4" />
               Join Platform

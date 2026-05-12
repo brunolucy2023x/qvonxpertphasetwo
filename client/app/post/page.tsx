@@ -10,26 +10,49 @@ function Page() {
   const { isAuthenticated, loading } = useGlobalContext();
   const router = useRouter();
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_BASE_URL ||
-    "https://qvonxpert.com";
+  const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
 
+  // =========================
+  // AUTH GUARD (SUPABASE SAFE)
+  // =========================
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      router.push(`${baseUrl}/login`);
+    if (loading) return;
+
+    if (!isAuthenticated) {
+      // Redirect to login with "redirect" query
+      const redirectUrl = encodeURIComponent(pathname);
+      router.replace(`/login?redirect=${redirectUrl}`);
     }
-  }, [isAuthenticated, loading, router]);
+  }, [isAuthenticated, loading, router, pathname]);
+
+  // =========================
+  // LOADING STATE (PREVENT FLASH)
+  // =========================
+  if (loading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Checking authentication...
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col min-h-screen bg-gray-50">
       <Header />
 
-      <h2 className="flex-1 pt-8 mx-auto w-[90%] text-3xl font-bold text-black">
-        Create a Job Post
-      </h2>
+      {/* PAGE TITLE */}
+      <div className="w-[90%] mx-auto pt-8">
+        <h2 className="text-3xl font-bold text-black">Create a Job Post</h2>
+        <p className="text-gray-500 mt-1">
+          Post your job directly to Supabase database
+        </p>
+      </div>
 
-      <div className="flex-1 pt-8 w-[90%] mx-auto flex justify-center items-center">
-        <JobForm />
+      {/* FORM AREA */}
+      <div className="flex-1 w-[90%] mx-auto flex justify-center items-start pt-10">
+        <div className="w-full max-w-3xl bg-white p-6 rounded-xl shadow-sm border">
+          <JobForm />
+        </div>
       </div>
     </div>
   );

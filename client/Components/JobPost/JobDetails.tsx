@@ -1,12 +1,15 @@
 "use client";
 
-import { useGlobalContext } from "@/context/globalContext";
 import React from "react";
+import dynamic from "next/dynamic";
+
+import { useGlobalContext } from "@/context/globalContext";
+
 import { Label } from "../ui/label";
-import "react-quill-new/dist/quill.snow.css";
 import { Separator } from "../ui/separator";
 import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
+
 import {
   Select,
   SelectContent,
@@ -14,104 +17,127 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import dynamic from "next/dynamic";
 
-const ReactQuill = dynamic(() => import("react-quill-new"), {
-  ssr: false,
-});
+import "react-quill-new/dist/quill.snow.css";
 
+const ReactQuill = dynamic(
+  () => import("react-quill-new"),
+  { ssr: false }
+);
+
+/* =======================
+   JOB DESCRIPTION EDITOR
+======================= */
 function MyEditor() {
-  const { setJobDescription, jobDescription } = useGlobalContext();
+  const { jobDescription, setJobDescription } = useGlobalContext();
 
   return (
-    <ReactQuill
-      value={jobDescription || ""}
-      onChange={setJobDescription}
-      style={{
-        minHeight: "400px",
-        maxHeight: "900px",
-      }}
-      modules={{
-        toolbar: true,
-      }}
-      className="custom-quill-editor"
-    />
+    <div className="min-h-[400px]">
+      <ReactQuill
+        theme="snow"
+        value={jobDescription || ""}
+        onChange={(value) => setJobDescription(value)}
+        modules={{
+          toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            ["bold", "italic", "underline"],
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["link"],
+            ["clean"],
+          ],
+        }}
+        className="bg-white"
+      />
+    </div>
   );
 }
 
+/* =======================
+   MAIN COMPONENT
+======================= */
 function JobDetails() {
   const {
-    handleSalaryChange,
     salary,
+    setSalary,
     salaryType,
     setSalaryType,
-    setNegotiable,
     negotiable,
+    setNegotiable,
   } = useGlobalContext();
 
   return (
-    <div className="p-6 flex flex-col gap-4 bg-background border border-border rounded-lg">
-      {/* Job Description */}
-      <div className="grid grid-cols-2 gap-6">
-        <div className="flex-1">
-          <h3 className="text-black font-bold">Job Description</h3>
-          <Label htmlFor="jobDescription" className="text-gray-500 mt-2">
+    <div className="p-6 flex flex-col gap-6 bg-background border border-border rounded-lg">
+
+      {/* ================= DESCRIPTION ================= */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h3 className="text-lg font-bold">Job Description</h3>
+          <Label className="text-gray-500 mt-2 block">
             Provide a detailed description of the job.
           </Label>
         </div>
-        <div className="flex-1">
+
+        <div>
           <MyEditor />
         </div>
       </div>
 
-      <Separator className="my-2" />
+      <Separator />
 
-      {/* Salary Section */}
-      <div className="relative grid grid-cols-2 gap-6">
+      {/* ================= SALARY ================= */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
         <div>
-          <h3 className="text-black font-bold">Salary</h3>
-          <Label htmlFor="salary" className="text-gray-500 mt-2">
-            Enter the salary range for the job.
+          <h3 className="text-lg font-bold">Salary</h3>
+          <Label className="text-gray-500 mt-2 block">
+            Enter salary range for the job.
           </Label>
         </div>
 
-        <div>
+        <div className="space-y-4">
+
+          {/* SALARY INPUT */}
           <Input
             type="number"
-            id="salary"
             placeholder="Enter Salary"
-            value={salary}
-            onChange={(e) => handleSalaryChange({ target: { value: Number(e.target.value) } })}
-            className="mt-2"
+            value={salary ?? ""}
+            onChange={(e) => setSalary(Number(e.target.value))}
           />
 
-          <div className="flex gap-2 mt-2 justify-between">
-            {/* Negotiable / Hide Salary */}
-            <div className="flex items-center space-x-2 border border-gray-300 rounded-md p-2">
+          {/* OPTIONS */}
+          <div className="flex flex-col md:flex-row gap-4 justify-between">
+
+            {/* NEGOTIABLE */}
+            <div className="flex items-center space-x-2 border p-3 rounded-md">
               <Checkbox
-                id="negotiable"
                 checked={negotiable}
-                onCheckedChange={setNegotiable}
+                onCheckedChange={(checked) =>
+                  setNegotiable(checked === true)
+                }
               />
-              <Label htmlFor="negotiable" className="text-gray-500">
+
+              <Label className="text-gray-500">
                 Negotiable / Hide Salary
               </Label>
             </div>
 
-            {/* Salary Type */}
-            <div>
-              <Select onValueChange={setSalaryType} value={salaryType}>
+            {/* SALARY TYPE */}
+            <div className="min-w-[180px]">
+              <Select value={salaryType} onValueChange={setSalaryType}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Type" />
                 </SelectTrigger>
-                <SelectContent className="w-[120px] mt-2">
+
+                <SelectContent>
                   <SelectItem value="Yearly">Yearly</SelectItem>
                   <SelectItem value="Monthly">Monthly</SelectItem>
+                  <SelectItem value="Weekly">Weekly</SelectItem>
                   <SelectItem value="Hourly">Hourly</SelectItem>
                   <SelectItem value="Fixed">Fixed</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
           </div>
         </div>
       </div>

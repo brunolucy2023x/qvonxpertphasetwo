@@ -1,4 +1,5 @@
 "use client";
+
 import React from "react";
 import { Button } from "./ui/button";
 import { useJobsContext } from "@/context/jobsContext";
@@ -7,10 +8,28 @@ import { Label } from "./ui/label";
 import { Slider } from "./ui/slider";
 import formatMoney from "@/utils/formatMoney";
 
+const defaultFilters = {
+  fullTime: false,
+  partTime: false,
+  contract: false,
+  internship: false,
+  fullStack: false,
+  backend: false,
+  devOps: false,
+  uiUx: false,
+};
+
 function Filters() {
+  const jobsContext = useJobsContext();
+
+  // SAFETY CHECK
+  if (!jobsContext) {
+    return null;
+  }
+
   const {
     handleFilterChange,
-    filters,
+    filters = defaultFilters,
     setFilters,
     minSalary,
     maxSalary,
@@ -18,46 +37,79 @@ function Filters() {
     setMaxSalary,
     searchJobs,
     setSearchQuery,
-  } = useJobsContext();
+  } = jobsContext;
 
+  /* =========================
+     CLEAR FILTERS
+  ========================= */
   const clearAllFilters = () => {
-    setFilters({
-      fullTime: false,
-      partTime: false,
-      contract: false,
-      internship: false,
-      fullStack: false,
-      backend: false,
-      devOps: false,
-      uiUx: false,
+    setFilters(defaultFilters);
+
+    setSearchQuery({
+      tags: "",
+      location: "",
+      title: "",
     });
 
-    setSearchQuery({ tags: "", location: "", title: "" });
+    setMinSalary(0);
+    setMaxSalary(200000);
   };
 
+  /* =========================
+     SALARY HANDLERS
+  ========================= */
   const handleMinSalaryChange = (value: number[]) => {
-    setMinSalary(value[0]);
-    if (value[0] > maxSalary) {
-      setMaxSalary(value[0]);
+    const min = value[0];
+
+    setMinSalary(min);
+
+    if (min > maxSalary) {
+      setMaxSalary(min);
     }
   };
 
   const handleMaxSalaryChange = (value: number[]) => {
-    setMaxSalary(value[0]);
-    if (value[0] < minSalary) {
-      setMinSalary(value[0]);
+    const max = value[0];
+
+    setMaxSalary(max);
+
+    if (max < minSalary) {
+      setMinSalary(max);
     }
   };
 
+  /* =========================
+     FILTER ITEM COMPONENT
+  ========================= */
+  const FilterItem = ({
+    id,
+    label,
+  }: {
+    id: keyof typeof defaultFilters;
+    label: string;
+  }) => (
+    <div className="flex items-center space-x-2">
+      <Checkbox
+        id={id}
+        checked={filters?.[id] ?? false}
+        onCheckedChange={() => handleFilterChange(id)}
+      />
+
+      <Label htmlFor={id}>{label}</Label>
+    </div>
+  );
+
   return (
     <div className="w-[22rem] pr-4 space-y-6">
+
+      {/* ================= JOB TYPE ================= */}
       <div>
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold mb-4">Job Type</h2>
+          <h2 className="text-lg font-semibold">Job Type</h2>
 
           <Button
-            variant={"ghost"}
-            className="h-auto p-0 text-red-500 hover:text-red-700"
+            variant="ghost"
+            className="text-red-500 hover:text-red-700"
             onClick={() => {
               clearAllFilters();
               searchJobs();
@@ -66,114 +118,68 @@ function Filters() {
             Clear All
           </Button>
         </div>
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="fullTime"
-              checked={filters.fullTime}
-              onCheckedChange={() => handleFilterChange("fullTime")}
-            />
-            <Label htmlFor="fullTime">Full Time</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="partTime"
-              checked={filters.partTime}
-              onCheckedChange={() => handleFilterChange("partTime")}
-            />
-            <Label htmlFor="partTime">Part Time</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="contract"
-              checked={filters.contract}
-              onCheckedChange={() => handleFilterChange("contract")}
-            />
-            <Label htmlFor="contract">Contract</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="internship"
-              checked={filters.internship}
-              onCheckedChange={() => handleFilterChange("internship")}
-            />
-            <Label htmlFor="internship">Internship</Label>
-          </div>
+
+        <div className="space-y-3 mt-4">
+          <FilterItem id="fullTime" label="Full Time" />
+          <FilterItem id="partTime" label="Part Time" />
+          <FilterItem id="contract" label="Contract" />
+          <FilterItem id="internship" label="Internship" />
         </div>
       </div>
 
+      {/* ================= TAGS ================= */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">Tags</h2>
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="fullStack"
-              checked={filters.fullStack}
-              onCheckedChange={() => handleFilterChange("fullStack")}
-            />
-            <Label htmlFor="fullStack">FullStack</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="backend"
-              checked={filters.backend}
-              onCheckedChange={() => handleFilterChange("backend")}
-            />
-            <Label htmlFor="backend">Backend</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="devOps"
-              checked={filters.devOps}
-              onCheckedChange={() => handleFilterChange("devOps")}
-            />
-            <Label htmlFor="devOps">DevOps</Label>
-          </div>
+        <h2 className="text-lg font-semibold">Tags</h2>
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="uiUx"
-              checked={filters.uiUx}
-              onCheckedChange={() => handleFilterChange("uiUx")}
-            />
-            <Label htmlFor="uiUx">UI/UX</Label>
-          </div>
+        <div className="space-y-3 mt-4">
+          <FilterItem id="fullStack" label="Full Stack" />
+          <FilterItem id="backend" label="Backend" />
+          <FilterItem id="devOps" label="DevOps" />
+          <FilterItem id="uiUx" label="UI/UX" />
         </div>
       </div>
 
+      {/* ================= SALARY ================= */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">Salary Range</h2>
-        <div className="flex flex-col gap-4">
-          <Label htmlFor="minSalary">Minimum Salary</Label>
-          <Slider
-            id="minSalary"
-            min={0}
-            max={200000}
-            step={50}
-            value={[minSalary]}
-            onValueChange={handleMinSalaryChange}
-            className="w-full"
-          />
-          <span className="text-sm text-gray-500">
-            {formatMoney(minSalary, "GBP")}
-          </span>
+        <h2 className="text-lg font-semibold">Salary Range</h2>
+
+        <div className="flex flex-col gap-4 mt-4">
+
+          <div>
+            <Label>Minimum Salary</Label>
+
+            <Slider
+              min={0}
+              max={200000}
+              step={100}
+              value={[minSalary ?? 0]}
+              onValueChange={handleMinSalaryChange}
+            />
+
+            <span className="text-sm text-gray-500">
+              {formatMoney(minSalary ?? 0, "GBP")}
+            </span>
+          </div>
+
+          <div>
+            <Label>Maximum Salary</Label>
+
+            <Slider
+              min={0}
+              max={200000}
+              step={100}
+              value={[maxSalary ?? 200000]}
+              onValueChange={handleMaxSalaryChange}
+            />
+
+            <span className="text-sm text-gray-500">
+              {formatMoney(maxSalary ?? 200000, "GBP")}
+            </span>
+          </div>
+
         </div>
       </div>
-      <div className="flex flex-col gap-4">
-        <Label htmlFor="maxSalary">Maximum Salary</Label>
-        <Slider
-          id="maxSalary"
-          min={0}
-          max={200000}
-          step={50}
-          value={[maxSalary]}
-          onValueChange={handleMaxSalaryChange}
-          className="w-full"
-        />
-        <span className="text-sm text-gray-500">
-          {formatMoney(maxSalary, "GBP")}
-        </span>
-      </div>
+
     </div>
   );
 }

@@ -1,29 +1,65 @@
+"use client";
+
 import React, {
   createContext,
   useContext,
   useEffect,
   useState,
 } from "react";
-import axios from "axios";
+import { supabase } from "@/lib/supabase";
 
 const GlobalContext = createContext();
 
-// =========================
-// AXIOS CONFIG (SAFE)
-// =========================
-axios.defaults.baseURL =
-  process.env.NEXT_PUBLIC_API_URL || "https://qvonxpert.com";
-
-axios.defaults.withCredentials = true;
-
 export const GlobalContextProvider = ({ children }) => {
+  // =========================
+  // AUTH STATE
+  // =========================
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [auth0User, setAuth0User] = useState(null);
-  const [userProfile, setUserProfile] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [authUser, setAuthUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(true); // true until we know auth state
 
   // =========================
-  // FORM STATE (UNCHANGED)
+  // GET CURRENT SESSION
+  // =========================
+  const getUser = async () => {
+    setLoading(true);
+
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
+
+    if (session?.user) {
+      setIsAuthenticated(true);
+      setAuthUser(session.user);
+
+      // Fetch profile from DB
+      await fetchUserProfile(session.user.id);
+    } else {
+      setIsAuthenticated(false);
+      setAuthUser(null);
+      setUserProfile(null);
+    }
+
+    setLoading(false);
+  };
+
+  // =========================
+  // FETCH PROFILE FROM DB
+  // =========================
+  const fetchUserProfile = async (userId) => {
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("auth0_id", userId)
+      .maybeSingle();
+
+    if (!error) setUserProfile(data);
+  };
+
+  // =========================
+  // JOB FORM STATE
   // =========================
   const [jobTitle, setJobTitle] = useState("");
   const [jobDescription, setJobDescription] = useState("");
@@ -40,56 +76,13 @@ export const GlobalContextProvider = ({ children }) => {
   });
 
   // =========================
-  // AUTH CHECK (EXISTING BACKEND)
+  // FORM HANDLERS
   // =========================
-  useEffect(() => {
-    const checkAuth = async () => {
-      setLoading(true);
-      try {
-        const res = await axios.get("/api/v1/check-auth");
-
-        setIsAuthenticated(res.data.isAuthenticated);
-        setAuth0User(res.data.user);
-      } catch (error) {
-        console.log("Error checking auth", error);
-        setIsAuthenticated(false);
-        setAuth0User(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  // =========================
-  // USER PROFILE FETCH
-  // =========================
-  const getUserProfile = async (id) => {
-    if (!id) return;
-
-    try {
-      const res = await axios.get(`/api/v1/user/${id}`);
-      setUserProfile(res.data);
-    } catch (error) {
-      console.log("Error getting user profile", error);
-    }
-  };
-
-  // =========================
-  // INPUT HANDLERS
-  // =========================
-  const handleTitleChange = (e) =>
-    setJobTitle(e.target.value.trimStart());
-
+  const handleTitleChange = (e) => setJobTitle(e.target.value.trimStart());
   const handleDescriptionChange = (e) =>
     setJobDescription(e.target.value.trimStart());
+  const handleSalaryChange = (e) => setSalary(Number(e.target.value));
 
-  const handleSalaryChange = (e) => setSalary(e.target.value);
-
-  // =========================
-  // RESET FORM
-  // =========================
   const resetJobForm = () => {
     setJobTitle("");
     setJobDescription("");
@@ -103,27 +96,40 @@ export const GlobalContextProvider = ({ children }) => {
   };
 
   // =========================
-  // AUTO PROFILE LOAD
+  // INIT AUTH & LISTENER
   // =========================
   useEffect(() => {
-    if (isAuthenticated && auth0User) {
-      getUserProfile(auth0User.sub);
-    }
-  }, [isAuthenticated, auth0User]);
+    // Check session on mount
+    getUser();
 
-  // =========================
-  // CONTEXT VALUE
-  // =========================
+    // Listen to auth state changes
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session?.user) {
+          setIsAuthenticated(true);
+          setAuthUser(session.user);
+          fetchUserProfile(session.user.id);
+        } else {
+          setIsAuthenticated(false);
+          setAuthUser(null);
+          setUserProfile(null);
+        }
+      }
+    );
+
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
   return (
     <GlobalContext.Provider
       value={{
+        // Auth
         isAuthenticated,
-        auth0User,
+        authUser,
         userProfile,
-        getUserProfile,
         loading,
 
-        // form
+        // Job form state
         jobTitle,
         jobDescription,
         salary,
@@ -134,18 +140,16 @@ export const GlobalContextProvider = ({ children }) => {
         skills,
         location,
 
-        // setters
+        // Handlers
         handleTitleChange,
         handleDescriptionChange,
         handleSalaryChange,
         setActiveEmploymentTypes,
-        setJobDescription,
         setSalaryType,
         setNegotiable,
         setTags,
         setSkills,
         setLocation,
-
         resetJobForm,
       }}
     >
@@ -154,4 +158,7 @@ export const GlobalContextProvider = ({ children }) => {
   );
 };
 
+// =========================
+// HOOK
+// =========================
 export const useGlobalContext = () => useContext(GlobalContext);

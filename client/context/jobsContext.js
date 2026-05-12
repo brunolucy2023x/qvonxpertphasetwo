@@ -1,25 +1,12 @@
+"use client";
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useGlobalContext } from "./globalContext";
-import axios from "axios";
+import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase"; // ✅ SUPABASE ADDED
 
 const JobsContext = createContext();
-
-// =========================
-// API CONFIG (EXISTING BACKEND)
-// =========================
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
-if (!API_BASE_URL) {
-  throw new Error("❌ NEXT_PUBLIC_API_URL is missing in .env.local");
-}
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-});
 
 // =========================
 // CONTEXT PROVIDER
@@ -28,57 +15,37 @@ export const JobsContextProvider = ({ children }) => {
   const { userProfile } = useGlobalContext();
   const router = useRouter();
 
-  // =========================
-  // EXISTING STATE (MONGO)
-  // =========================
   const [jobs, setJobs] = useState([]);
   const [userJobs, setUserJobs] = useState([]);
-
-  // =========================
-  // NEW STATE (SUPABASE)
-  // =========================
   const [supabaseJobs, setSupabaseJobs] = useState([]);
-
-  const [loadingJobs, setLoadingJobs] = useState(false);
-
-  const [searchQuery, setSearchQuery] = useState({
-    tags: "",
-    location: "",
-    title: "",
-  });
-
-  const [filters, setFilters] = useState({
-    fullTime: false,
-    partTime: false,
-    internship: false,
-    contract: false,
-    fullStack: false,
-    backend: false,
-    devOps: false,
-    uiux: false,
-  });
-
-  const [minSalary, setMinSalary] = useState(30000);
-  const [maxSalary, setMaxSalary] = useState(120000);
+  const [loading, setLoading] = useState(false);
 
   // =========================
-  // GET JOBS (MONGO)
+  // GET ALL JOBS (SUPABASE)
   // =========================
   const getJobs = async () => {
-    setLoadingJobs(true);
+    setLoading(true);
+
     try {
-      const res = await api.get("/api/v1/jobs");
-      setJobs(res.data);
+      const { data, error } = await supabase
+        .from("jobs")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setJobs(data || []);
     } catch (error) {
-      console.log("Error getting jobs", error);
+      console.log("Get jobs error:", error.message);
       toast.error("Failed to fetch jobs");
+      setJobs([]);
     } finally {
-      setLoadingJobs(false);
+      setLoading(false);
     }
   };
 
   // =========================
-  // GET JOBS (SUPABASE)
+  // GET SUPABASE JOBS (OPTIONAL DUPLICATE VIEW)
   // =========================
   const getSupabaseJobs = async () => {
     try {
@@ -87,170 +54,135 @@ export const JobsContextProvider = ({ children }) => {
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.log("Supabase error:", error);
-        return;
-      }
+      if (error) throw error;
 
       setSupabaseJobs(data || []);
     } catch (err) {
-      console.log("Supabase fetch error:", err);
+      console.log("Supabase error:", err.message);
     }
   };
 
   // =========================
-  // USER JOBS (MONGO)
+  // GET USER JOBS
   // =========================
   const getUserJobs = async (userId) => {
     if (!userId) return;
-    setLoadingJobs(true);
 
     try {
-      const res = await api.get(`/api/v1/jobs/user/${userId}`);
-      setUserJobs(res.data);
+      const { data, error } = await supabase
+        .from("jobs")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setUserJobs(data || []);
     } catch (error) {
-      console.log("Error getting user jobs", error);
-      toast.error("Failed to fetch your jobs");
-    } finally {
-      setLoadingJobs(false);
+      console.log("User jobs error:", error.message);
+      setUserJobs([]);
     }
   };
 
   // =========================
-  // CREATE JOB (MONGO)
+  // CREATE JOB
   // =========================
   const createJob = async (jobData) => {
     try {
-      const res = await api.post("/api/v1/jobs", jobData);
+      const { data, error } = await supabase
+        .from("jobs")
+        .insert([
+          {
+            ...jobData,
+            user_id: userProfile?._id,
+            created_at: new Date().toISOString(),
+          },
+        ])
+        .select()
+        .single();
 
-      toast.success("Job created successfully");
+      if (error) throw error;
 
-      setJobs((prev) => [res.data, ...prev]);
+      setJobs((prev) => [data, ...prev]);
 
-      if (userProfile?._id) {
-        await getUserJobs(userProfile._id);
-      }
+      toast.success("Job created");
 
-      router.push(`/job/${res.data._id}`);
+      router.push(`/job/${data.id || data._id}`);
     } catch (error) {
-      console.log("Error creating job", error);
+      console.log("Create job error:", error.message);
       toast.error("Failed to create job");
     }
   };
 
   // =========================
-  // SEARCH JOBS (MONGO)
-  // =========================
-  const searchJobs = async (tags, location, title) => {
-    setLoadingJobs(true);
-
-    try {
-      const query = new URLSearchParams();
-
-      if (tags) query.append("tags", tags);
-      if (location) query.append("location", location);
-      if (title) query.append("title", title);
-
-      const res = await api.get(`/api/v1/jobs/search?${query.toString()}`);
-      setJobs(res.data);
-    } catch (error) {
-      console.log("Error searching jobs", error);
-      toast.error("Failed to search jobs");
-    } finally {
-      setLoadingJobs(false);
-    }
-  };
-
-  // =========================
-  // GET JOB BY ID (MONGO)
-  // =========================
-  const getJobById = async (id) => {
-    if (!id) return null;
-
-    setLoadingJobs(true);
-
-    try {
-      const res = await api.get(`/api/v1/jobs/${id}`);
-      return res.data;
-    } catch (error) {
-      console.log("Error getting job by id", error);
-      toast.error("Failed to fetch job details");
-      return null;
-    } finally {
-      setLoadingJobs(false);
-    }
-  };
-
-  // =========================
-  // LIKE JOB (MONGO)
+  // LIKE JOB (SIMPLE ARRAY UPDATE)
   // =========================
   const likeJob = async (jobId) => {
-    if (!jobId) return;
-
     try {
-      await api.put(`/api/v1/jobs/like/${jobId}`);
-      toast.success("Job updated");
+      const job = jobs.find((j) => j.id === jobId || j._id === jobId);
+
+      const { error } = await supabase
+        .from("jobs")
+        .update({ likes: (job?.likes || 0) + 1 })
+        .eq("id", jobId);
+
+      if (error) throw error;
+
       await getJobs();
     } catch (error) {
-      console.log("Error liking job", error);
-      toast.error("Failed to update like");
+      console.log("Like error:", error.message);
+      toast.error("Failed to like job");
     }
   };
 
   // =========================
-  // APPLY JOB (MONGO)
+  // APPLY JOB
   // =========================
   const applyToJob = async (jobId) => {
-    if (!jobId || !userProfile?._id) return;
-
-    const job = jobs.find((j) => j._id === jobId);
-
-    if (job?.applicants?.includes(userProfile._id)) {
-      toast.error("Already applied");
-      return;
-    }
-
     try {
-      await api.put(`/api/v1/jobs/apply/${jobId}`);
+      const job = jobs.find((j) => j.id === jobId || j._id === jobId);
+
+      const { error } = await supabase
+        .from("jobs")
+        .update({
+          applicants: [
+            ...(job?.applicants || []),
+            userProfile?._id,
+          ],
+        })
+        .eq("id", jobId);
+
+      if (error) throw error;
+
       toast.success("Applied successfully");
       await getJobs();
     } catch (error) {
-      console.log("Error applying", error);
+      console.log("Apply error:", error.message);
       toast.error("Failed to apply");
     }
   };
 
   // =========================
-  // DELETE JOB (MONGO)
+  // DELETE JOB
   // =========================
   const deleteJob = async (jobId) => {
-    if (!jobId) return;
-
     try {
-      await api.delete(`/api/v1/jobs/${jobId}`);
+      const { error } = await supabase
+        .from("jobs")
+        .delete()
+        .eq("id", jobId);
 
-      setJobs((prev) => prev.filter((j) => j._id !== jobId));
-      setUserJobs((prev) => prev.filter((j) => j._id !== jobId));
+      if (error) throw error;
 
-      toast.success("Deleted successfully");
+      setJobs((prev) =>
+        prev.filter((j) => j.id !== jobId && j._id !== jobId)
+      );
+
+      toast.success("Deleted");
     } catch (error) {
-      console.log("Error deleting job", error);
+      console.log("Delete error:", error.message);
       toast.error("Failed to delete job");
     }
-  };
-
-  // =========================
-  // HELPERS
-  // =========================
-  const handleSearchChange = (field, value) => {
-    setSearchQuery((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleFilterChange = (filterName) => {
-    setFilters((prev) => ({
-      ...prev,
-      [filterName]: !prev[filterName],
-    }));
   };
 
   // =========================
@@ -258,7 +190,7 @@ export const JobsContextProvider = ({ children }) => {
   // =========================
   useEffect(() => {
     getJobs();
-    getSupabaseJobs(); // ✅ NEW
+    getSupabaseJobs();
 
     if (userProfile?._id) {
       getUserJobs(userProfile._id);
@@ -268,32 +200,16 @@ export const JobsContextProvider = ({ children }) => {
   return (
     <JobsContext.Provider
       value={{
-        // MONGO
         jobs,
         userJobs,
-
-        // SUPABASE
         supabaseJobs,
-
-        loading: loadingJobs,
+        loading,
 
         createJob,
-        searchJobs,
-        getJobById,
+        getJobs,
         likeJob,
         applyToJob,
         deleteJob,
-
-        searchQuery,
-        setSearchQuery,
-        handleSearchChange,
-        filters,
-        handleFilterChange,
-        minSalary,
-        setMinSalary,
-        maxSalary,
-        setMaxSalary,
-        setFilters,
       }}
     >
       {children}

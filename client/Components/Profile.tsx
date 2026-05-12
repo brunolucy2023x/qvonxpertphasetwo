@@ -15,12 +15,12 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useGlobalContext } from "@/context/globalContext";
 import { Badge } from "@/Components/ui/badge";
+import { supabase } from "@/lib/supabase";
 
 function Profile() {
-  const { userProfile } = useGlobalContext();
+  const { userProfile, setUserProfile } = useGlobalContext();
   const router = useRouter();
 
-  // ✅ SAFE DESTRUCTURING (prevents crashes when Supabase loads async user)
   const {
     profilePicture,
     name = "User",
@@ -29,7 +29,23 @@ function Profile() {
   } = userProfile || {};
 
   const baseUrl =
-    process.env.NEXT_PUBLIC_APP_BASE_URL || "https://qvonxpert.com";
+    process.env.NEXT_PUBLIC_APP_BASE_URL || "http://localhost:3000";
+
+  const handleLogout = async () => {
+    try {
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      if (error) console.error("Logout error:", error);
+
+      // Clear global context
+      setUserProfile(null);
+
+      // Redirect to home
+      router.push("/");
+    } catch (err) {
+      console.error("Unexpected logout error:", err);
+    }
+  };
 
   return (
     <DropdownMenu>
@@ -67,15 +83,10 @@ function Profile() {
           <span>Settings</span>
         </DropdownMenuItem>
 
-        {/* LOGOUT (SUPABASE READY HOOK POINT) */}
+        {/* LOGOUT */}
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={() => {
-            // 👉 SUPABASE FUTURE INTEGRATION POINT
-            // supabase.auth.signOut()
-
-            window.location.href = `${baseUrl}/logout`;
-          }}
+          onClick={handleLogout}
         >
           <LogOut className="mr-2 h-4 w-4" />
           <span>Logout</span>
