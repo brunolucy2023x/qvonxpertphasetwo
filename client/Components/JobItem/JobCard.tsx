@@ -32,11 +32,11 @@ function JobCard({ job, activeJob }: JobProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [loadingLike, setLoadingLike] = useState(false);
 
-  // ✅ SUPABASE USER ID (not _id)
+  // ✅ SUPABASE USER ID
   const userId = userProfile?.auth0_id || userProfile?.id;
 
   // ✅ SUPABASE JOB ID
-  const jobId = job?.id || (job as any)?._id;
+  const jobId = job._id;
 
   const {
     title,
@@ -51,7 +51,7 @@ function JobCard({ job, activeJob }: JobProps) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_BASE_URL || "http://localhost:3000";
 
   // =========================
-  // CHECK LIKE STATUS (SUPABASE)
+  // CHECK LIKE STATUS
   // =========================
   useEffect(() => {
     const fetchLikeStatus = async () => {
@@ -82,7 +82,6 @@ function JobCard({ job, activeJob }: JobProps) {
     if (!userId || !jobId || loadingLike) return;
 
     if (!isAuthenticated) {
-      // Redirect to login and return to this job after login
       router.push(`${baseUrl}/login?redirect=/job/${jobId}`);
       return;
     }
@@ -110,7 +109,6 @@ function JobCard({ job, activeJob }: JobProps) {
         setIsLiked(true);
       }
 
-      // Optional legacy sync (safe fallback)
       likeJob?.(jobId);
     } catch (error: any) {
       console.error("Like error:", error.message);

@@ -18,6 +18,8 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@supabase/supabase-js": "^2.105.4",
     "axios": "^1.7.7",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "currency.js": "^2.0.4",
