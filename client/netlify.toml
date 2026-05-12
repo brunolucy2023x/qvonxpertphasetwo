@@ -1,26 +1,7 @@
 [build]
-  base = "client"                  # your Next.js folder
-  publish = "client/.next"         # where Next.js outputs the build
+  base = "client"
+  publish = "client/.next"
   command = "npm run build"
-
-# Environment variables
-[build.environment]
-  # =========================
-  # APP URLS (LOCAL)
-  # =========================
-  APP_BASE_URL = "http://localhost:3000"
-  NEXT_PUBLIC_APP_BASE_URL = "http://localhost:3000"
-
-  # =========================
-  # SUPABASE (DEV)
-  # =========================
-  NEXT_PUBLIC_SUPABASE_URL = "https://jdigwupxhbwbqmrvoegh.supabase.co"
-  NEXT_PUBLIC_SUPABASE_ANON_KEY = "sb_publishable_rIqxvuhDBZSwyYepFg7Zug_hBDiXdAJ"
-
-  # =========================
-  # API (LOCAL)
-  # =========================
-  NEXT_PUBLIC_API_URL = "http://localhost:3000"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
