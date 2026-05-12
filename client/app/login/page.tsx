@@ -1,5 +1,4 @@
-"use client"; // mark as client component
-
+"use client"; // Only a wrapper
 import LoginClient from "./LoginClient";
 
 export default function Page() {
