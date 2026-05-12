@@ -1,11 +1,11 @@
 "use client";
 
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useMemo, useState } from "react";
 
-function LoginPage() {
+export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -20,30 +20,28 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  /* =========================================
-      DYNAMIC IMAGE + TEXT
-  ========================================= */
+  /* =========================
+      DYNAMIC CONTENT
+  ========================= */
   const authContent = useMemo(() => {
     if (isSignup) {
       return {
         image: "/signupimage.jpg",
-        title: "Start Your Career Journey Today",
-        description:
-          "Create your account and unlock thousands of opportunities from top companies around the world.",
+        heading: "Create Your Account",
+        text: "Join QvonXpert and unlock career opportunities worldwide.",
       };
     }
 
     return {
       image: "/signinimage.jpg",
-      title: "Welcome Back to QvonXpert",
-      description:
-        "Login to continue exploring jobs, managing applications, and growing your professional career.",
+      heading: "Welcome Back",
+      text: "Login to manage jobs, applications and your profile.",
     };
   }, [isSignup]);
 
-  /* =========================================
+  /* =========================
       SUBMIT
-  ========================================= */
+  ========================= */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -51,11 +49,7 @@ function LoginPage() {
     setError("");
 
     try {
-      // =========================================
-      // CONNECT YOUR API HERE
-      // =========================================
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-
+      await new Promise((res) => setTimeout(res, 1200));
       router.push(redirect);
     } catch (err) {
       setError("Something went wrong");
@@ -65,147 +59,141 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen overflow-y-auto bg-[#f8fafc]">
 
-      <div className="grid lg:grid-cols-2 min-h-screen">
+      <div className="grid min-h-screen lg:grid-cols-2">
 
-        {/* =======================================
-            LEFT SIDE IMAGE
-        ======================================= */}
-        <div className="relative hidden lg:block overflow-hidden">
-
-          {/* DARK OVERLAY */}
-          <div className="absolute inset-0 bg-black/45 z-10" />
-
-          {/* IMAGE */}
-          <Image
-            src={authContent.image}
-            alt="Authentication Image"
-            fill
-            priority
-            className="object-cover transition-all duration-500"
-          />
-
-          {/* CONTENT */}
-          <div className="absolute z-20 bottom-16 left-16 right-10 text-white">
-
-            <div className="max-w-xl">
-
-              <h1 className="text-5xl font-bold leading-tight">
-                {authContent.title}
-              </h1>
-
-              <p className="mt-6 text-lg text-gray-200 leading-8">
-                {authContent.description}
-              </p>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* =======================================
-            RIGHT SIDE FORM
-        ======================================= */}
-        <div className="flex items-center justify-center px-6 py-10 bg-white">
+        {/* =========================================
+            LEFT SIDE (FORM)
+        ========================================= */}
+        <div className="flex items-center justify-center px-6 py-10">
 
           <div className="w-full max-w-md">
 
-            {/* LOGO / HEADER */}
-            <div className="mb-10">
+            {/* LOGO */}
+            <div className="flex items-center gap-3 mb-8">
 
-              <h2 className="text-4xl font-bold tracking-tight">
+              <Image
+                src="/logo.svg"
+                alt="Logo"
+                width={42}
+                height={42}
+                priority
+              />
+
+              <h1 className="text-2xl font-bold text-gray-900">
                 QvonXpert
+              </h1>
+
+            </div>
+
+            {/* TOGGLE */}
+            <div className="mb-6 flex rounded-2xl bg-white p-2 shadow-sm border">
+
+              <button
+                type="button"
+                onClick={() => setIsSignup(false)}
+                className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
+                  !isSignup
+                    ? "bg-black text-white"
+                    : "text-gray-500"
+                }`}
+              >
+                Login
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsSignup(true)}
+                className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
+                  isSignup
+                    ? "bg-black text-white"
+                    : "text-gray-500"
+                }`}
+              >
+                Sign Up
+              </button>
+
+            </div>
+
+            {/* HEADER */}
+            <div className="mb-6">
+
+              <h2 className="text-3xl font-bold text-gray-900">
+                {authContent.heading}
               </h2>
 
-              <p className="text-gray-500 mt-3 text-base">
-                {isSignup
-                  ? "Create your account and get started"
-                  : "Welcome back, login to continue"}
+              <p className="mt-2 text-sm text-gray-500">
+                {authContent.text}
               </p>
 
             </div>
 
             {/* FORM */}
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-5"
-            >
+            <form onSubmit={handleSubmit} className="space-y-4">
 
-              {/* FULL NAME */}
+              {/* NAME */}
               {isSignup && (
                 <div>
-
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="text-sm font-medium text-gray-700">
                     Full Name
                   </label>
 
                   <input
                     type="text"
-                    placeholder="John Doe"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    required={isSignup}
-                    className="w-full border border-gray-300 rounded-2xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-black transition"
+                    placeholder="John Doe"
+                    className="mt-2 w-full rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-black"
                   />
-
                 </div>
               )}
 
               {/* EMAIL */}
               <div>
-
-                <label className="block text-sm font-medium mb-2">
-                  Email Address
+                <label className="text-sm font-medium text-gray-700">
+                  Email
                 </label>
 
                 <input
                   type="email"
-                  placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full border border-gray-300 rounded-2xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-black transition"
+                  placeholder="you@example.com"
+                  className="mt-2 w-full rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-black"
                 />
-
               </div>
 
               {/* PASSWORD */}
               <div>
-
-                <label className="block text-sm font-medium mb-2">
+                <label className="text-sm font-medium text-gray-700">
                   Password
                 </label>
 
                 <input
                   type="password"
-                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full border border-gray-300 rounded-2xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-black transition"
+                  placeholder="••••••••"
+                  className="mt-2 w-full rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-black"
                 />
-
               </div>
 
               {/* FORGOT PASSWORD */}
               {!isSignup && (
                 <div className="flex justify-end">
-
                   <Link
                     href="/forgot-password"
-                    className="text-sm font-medium text-black hover:underline"
+                    className="text-sm text-gray-600 hover:underline"
                   >
                     Forgot Password?
                   </Link>
-
                 </div>
               )}
 
               {/* ERROR */}
               {error && (
-                <div className="text-red-500 text-sm font-medium">
+                <div className="text-sm text-red-500">
                   {error}
                 </div>
               )}
@@ -214,7 +202,7 @@ function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-black text-white py-3.5 rounded-2xl font-medium hover:opacity-90 transition disabled:opacity-50"
+                className="w-full rounded-xl bg-black py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
               >
                 {loading
                   ? "Please wait..."
@@ -225,36 +213,19 @@ function LoginPage() {
 
             </form>
 
-            {/* DIVIDER */}
-            <div className="relative my-8">
-
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
-              </div>
-
-              <div className="relative flex justify-center text-sm">
-                <span className="bg-white px-4 text-gray-500">
-                  OR
-                </span>
-              </div>
-
-            </div>
-
-            {/* GOOGLE BUTTON */}
-            <button
-              className="w-full border border-gray-300 rounded-2xl py-3.5 font-medium hover:bg-gray-50 transition"
-            >
+            {/* GOOGLE */}
+            <button className="mt-5 w-full rounded-xl border bg-white py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
               Continue with Google
             </button>
 
-            {/* TOGGLE */}
-            <div className="mt-8 text-center text-sm text-gray-600">
+            {/* SWITCH */}
+            <div className="mt-6 text-center text-sm text-gray-500">
 
               {isSignup ? (
                 <>
                   Already have an account?{" "}
-
                   <button
+                    type="button"
                     onClick={() => setIsSignup(false)}
                     className="font-semibold text-black hover:underline"
                   >
@@ -264,8 +235,8 @@ function LoginPage() {
               ) : (
                 <>
                   Don&apos;t have an account?{" "}
-
                   <button
+                    type="button"
                     onClick={() => setIsSignup(true)}
                     className="font-semibold text-black hover:underline"
                   >
@@ -280,10 +251,23 @@ function LoginPage() {
 
         </div>
 
+        {/* =========================================
+            RIGHT SIDE IMAGE
+        ========================================= */}
+        <div className="relative hidden lg:block">
+
+          <Image
+            src={authContent.image}
+            alt="Auth Image"
+            fill
+            className="object-cover"
+            priority
+          />
+
+        </div>
+
       </div>
 
     </div>
   );
 }
-
-export default LoginPage;
