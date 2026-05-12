@@ -1,7 +1,9 @@
-"use client"; // ← important!
+// Server Component
+import dynamic from "next/dynamic";
 
-import AuthPage from "./AuthPage";
+// Dynamically import client-only component (no SSR)
+const LoginClient = dynamic(() => import("./LoginClient"), { ssr: false });
 
 export default function Page() {
-  return <AuthPage />;
+  return <LoginClient />;
 }
