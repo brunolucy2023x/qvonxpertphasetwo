@@ -11,22 +11,16 @@ export default function AuthPage() {
 
   const redirect = searchParams.get("redirect") || "/dashboard";
 
-  // State to handle which auth view is active
   const [authView, setAuthView] = useState<"login" | "signup" | "forgot">("login");
 
-  // Form fields
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // Form feedback
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  /* =========================
-      DYNAMIC CONTENT
-  ========================= */
   const authContent = useMemo(() => {
     if (authView === "signup") {
       return {
@@ -35,7 +29,6 @@ export default function AuthPage() {
         text: "Join QvonXpert and unlock career opportunities worldwide.",
       };
     }
-
     if (authView === "forgot") {
       return {
         image: "/forgetpassword.jpg",
@@ -43,8 +36,6 @@ export default function AuthPage() {
         text: "Enter your email to receive a password reset link.",
       };
     }
-
-    // default is login
     return {
       image: "/signinimage.jpg",
       heading: "Welcome Back",
@@ -52,9 +43,6 @@ export default function AuthPage() {
     };
   }, [authView]);
 
-  /* =========================
-      SUBMIT HANDLER
-  ========================= */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -62,7 +50,6 @@ export default function AuthPage() {
     setSuccess("");
 
     try {
-      // Simulate API delay
       await new Promise((res) => setTimeout(res, 1200));
 
       if (authView === "forgot") {
@@ -70,7 +57,7 @@ export default function AuthPage() {
       } else {
         router.push(redirect);
       }
-    } catch (err) {
+    } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -81,25 +68,15 @@ export default function AuthPage() {
     <div className="min-h-screen overflow-y-auto bg-[#f8fafc]">
       <div className="grid min-h-screen lg:grid-cols-2">
 
-        {/* ===============================
-            LEFT SIDE FORM
-        =============================== */}
+        {/* LEFT SIDE FORM */}
         <div className="flex items-center justify-center px-6 py-10">
           <div className="w-full max-w-md">
 
             {/* LOGO */}
             <div className="flex items-center gap-3 mb-2">
               <Link href="/" className="flex items-center gap-3">
-                <Image
-                  src="/logo.svg"
-                  alt="Logo"
-                  width={42}
-                  height={42}
-                  priority
-                />
-                <h1 className="text-2xl font-bold text-gray-900">
-                  QvonXpert
-                </h1>
+                <Image src="/logo.svg" alt="Logo" width={42} height={42} priority />
+                <h1 className="text-2xl font-bold text-gray-900">QvonXpert</h1>
               </Link>
             </div>
 
@@ -142,7 +119,6 @@ export default function AuthPage() {
 
             {/* FORM */}
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* NAME */}
               {authView === "signup" && (
                 <div>
                   <label className="text-sm font-medium text-gray-700">Full Name</label>
@@ -156,7 +132,6 @@ export default function AuthPage() {
                 </div>
               )}
 
-              {/* EMAIL */}
               <div>
                 <label className="text-sm font-medium text-gray-700">Email</label>
                 <input
@@ -168,7 +143,6 @@ export default function AuthPage() {
                 />
               </div>
 
-              {/* PASSWORD */}
               {(authView === "login" || authView === "signup") && (
                 <div>
                   <label className="text-sm font-medium text-gray-700">Password</label>
@@ -182,7 +156,6 @@ export default function AuthPage() {
                 </div>
               )}
 
-              {/* FORGOT PASSWORD LINK */}
               {authView === "login" && (
                 <div className="flex justify-end">
                   <button
@@ -195,13 +168,9 @@ export default function AuthPage() {
                 </div>
               )}
 
-              {/* ERROR */}
               {error && <div className="text-sm text-red-500">{error}</div>}
-
-              {/* SUCCESS */}
               {success && <div className="text-sm text-green-500">{success}</div>}
 
-              {/* SUBMIT BUTTON */}
               <button
                 type="submit"
                 disabled={loading}
@@ -217,14 +186,12 @@ export default function AuthPage() {
               </button>
             </form>
 
-            {/* GOOGLE BUTTON */}
             {(authView === "login" || authView === "signup") && (
               <button className="mt-5 w-full rounded-xl border bg-white py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
                 Continue with Google
               </button>
             )}
 
-            {/* SWITCH LINKS */}
             <div className="mt-6 text-center text-sm text-gray-500">
               {authView === "signup" && (
                 <>
@@ -267,9 +234,7 @@ export default function AuthPage() {
           </div>
         </div>
 
-        {/* ===============================
-            RIGHT SIDE IMAGE
-        =============================== */}
+        {/* RIGHT SIDE IMAGE */}
         <div className="relative hidden lg:block">
           <Image
             src={authContent.image}
