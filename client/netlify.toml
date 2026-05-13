@@ -1,32 +1,15 @@
-# netlify.toml
-
 [build]
-  # Base directory where your Next.js app lives
   base = "client"
-
-  # Build command
   command = "npm run build"
-
-  # Publish directory for Next.js output
   publish = "client/.next"
 
-  # Environment variables to pass during build
-  environment = { 
-    NEXT_PUBLIC_API_URL = "$NEXT_PUBLIC_API_URL"
-    NEXT_PUBLIC_APP_BASE_URL = "$NEXT_PUBLIC_APP_BASE_URL"
-    NEXT_PUBLIC_SUPABASE_ANON_KEY = "$NEXT_PUBLIC_SUPABASE_ANON_KEY"
-    NEXT_PUBLIC_SUPABASE_URL = "$NEXT_PUBLIC_SUPABASE_URL"
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
-    NEXT_PUBLIC_CLERK_FRONTEND_API = "$NEXT_PUBLIC_CLERK_FRONTEND_API"
-  }
+[build.environment]
+  NEXT_PUBLIC_API_URL = "$NEXT_PUBLIC_API_URL"
+  NEXT_PUBLIC_APP_BASE_URL = "$NEXT_PUBLIC_APP_BASE_URL"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY = "$NEXT_PUBLIC_SUPABASE_ANON_KEY"
+  NEXT_PUBLIC_SUPABASE_URL = "$NEXT_PUBLIC_SUPABASE_URL"
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
+  NEXT_PUBLIC_CLERK_FRONTEND_API = "$NEXT_PUBLIC_CLERK_FRONTEND_API"
 
-# Use Netlify Next.js plugin for App Router support
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-
-# Optional: Redirect all routes to handle App Router properly
-# This ensures client-side routing works in production
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
