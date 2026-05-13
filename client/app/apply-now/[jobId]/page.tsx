@@ -55,7 +55,7 @@ export default function ApplyNowPage() {
         tags: data.tags || [],
         skills: data.skills || [],
         applicants: data.applicants || [],
-        likes: data.likes || [], // IMPORTANT (fixes TS build error)
+        likes: data.likes || [],
         createdBy: data.created_by || {
           _id: "",
           name: "",
@@ -112,6 +112,42 @@ export default function ApplyNowPage() {
   };
 
   /* =======================================================
+      FORMAT DESCRIPTION (🔥 FIXED BULLET RENDERING)
+  ======================================================= */
+  const renderDescription = (text: string) => {
+    return text.split("\n").map((line, i) => {
+      const t = line.trim();
+      if (!t) return null;
+
+      // bullet points
+      if (t.startsWith("-")) {
+        return (
+          <p key={i} className="flex gap-2">
+            <span>•</span>
+            <span>{t.replace("-", "").trim()}</span>
+          </p>
+        );
+      }
+
+      // role/type/location headers like "Role: ..."
+      if (t.includes(":")) {
+        const [label, value] = t.split(":");
+        return (
+          <p key={i} className="font-semibold">
+            <span className="uppercase">{label}:</span> {value}
+          </p>
+        );
+      }
+
+      return (
+        <p key={i} className="text-black/70">
+          {t}
+        </p>
+      );
+    });
+  };
+
+  /* =======================================================
       LOADING STATE
   ======================================================= */
   if (loading) {
@@ -144,7 +180,7 @@ export default function ApplyNowPage() {
 
       <section className="max-w-[900px] mx-auto px-6 py-12">
         <div className="border border-black bg-white p-10 space-y-6">
-          
+
           {/* TITLE */}
           <h1 className="text-5xl font-black">{job.title}</h1>
 
@@ -169,10 +205,10 @@ export default function ApplyNowPage() {
             ))}
           </div>
 
-          {/* DESCRIPTION */}
-          <p className="text-black/70 leading-7">
-            {job.description}
-          </p>
+          {/* DESCRIPTION (🔥 FIXED) */}
+          <div className="space-y-2 leading-7 text-black/70">
+            {renderDescription(job.description)}
+          </div>
 
           {/* SKILLS */}
           <div className="flex flex-wrap gap-3">
