@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -195,18 +194,19 @@ export default function Page() {
             <div className="p-10 lg:p-16 border-b lg:border-b-0 lg:border-r border-black">
               <div className="flex items-center gap-2 text-xs tracking-[0.3em] uppercase font-bold">
                 <Sparkles size={14} />
-                Editorial Careers
+                Qvonxpert Careers
               </div>
 
               <h1 className="mt-8 text-6xl md:text-8xl font-black leading-[0.9] tracking-[-0.05em] uppercase">
-                Jobs
+                Build
                 <br />
-                Reimagined
+                Your Future
               </h1>
 
               <p className="mt-8 text-lg leading-9 max-w-2xl text-black/70">
-                A bold editorial inspired job platform with oversized typography,
-                newspaper grids, brutalist layouts and premium spacing.
+                Discover premium career opportunities at Qvonxpert and connect
+                with innovative companies shaping the future of technology,
+                design, business, and digital transformation.
               </p>
 
               {/* SEARCH */}
@@ -218,7 +218,7 @@ export default function Page() {
 
                     <input
                       type="text"
-                      placeholder="Search"
+                      placeholder="Search roles"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       className="w-full bg-transparent outline-none font-medium"
@@ -230,7 +230,7 @@ export default function Page() {
 
                     <input
                       type="text"
-                      placeholder="Location"
+                      placeholder="Search location"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
                       className="w-full bg-transparent outline-none font-medium"
@@ -245,7 +245,7 @@ export default function Page() {
                       onChange={(e) => setType(e.target.value)}
                       className="w-full bg-transparent outline-none font-medium"
                     >
-                      <option value="All">All Types</option>
+                      <option value="All">All Roles</option>
                       <option value="Remote">Remote</option>
                       <option value="Full-Time">Full-Time</option>
                       <option value="Part-Time">Part-Time</option>
@@ -254,7 +254,7 @@ export default function Page() {
                   </div>
 
                   <button className="h-[78px] bg-black text-white text-sm uppercase tracking-[0.2em] font-bold hover:bg-[#222] transition">
-                    Search Jobs
+                    Explore Careers
                   </button>
                 </div>
               </div>
@@ -265,28 +265,28 @@ export default function Page() {
             <div className="bg-[#d9ff65] p-10 lg:p-16 flex flex-col justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] font-bold">
-                  Weekly Stats
+                  Qvonxpert Insights
                 </p>
 
                 <div className="mt-10 space-y-10">
                   <div>
                     <h2 className="text-6xl font-black">14K+</h2>
                     <p className="mt-2 text-sm uppercase tracking-[0.2em]">
-                      Open Positions
+                      Career Opportunities
                     </p>
                   </div>
 
                   <div>
                     <h2 className="text-6xl font-black">1.2K</h2>
                     <p className="mt-2 text-sm uppercase tracking-[0.2em]">
-                      Companies Hiring
+                      Trusted Employers
                     </p>
                   </div>
 
                   <div>
                     <h2 className="text-6xl font-black">92%</h2>
                     <p className="mt-2 text-sm uppercase tracking-[0.2em]">
-                      Remote Friendly
+                      Flexible & Remote Roles
                     </p>
                   </div>
                 </div>
@@ -294,8 +294,9 @@ export default function Page() {
 
               <div className="mt-14 border-t border-black pt-8">
                 <p className="text-sm leading-8 uppercase tracking-[0.2em]">
-                  Modern careers for designers, developers, marketers and future
-                  teams.
+                  Qvonxpert connects ambitious professionals with world-class
+                  opportunities across tech, marketing, finance, design, and
+                  innovation-driven industries.
                 </p>
               </div>
             </div>
@@ -315,7 +316,7 @@ export default function Page() {
             <div className="border border-black bg-white sticky top-24">
               <div className="border-b border-black p-6 flex items-center justify-between">
                 <h3 className="text-xl font-black uppercase">
-                  Filters
+                  Career Filters
                 </h3>
 
                 <Plus size={18} />
@@ -335,22 +336,22 @@ export default function Page() {
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 border-b border-black pb-8">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] font-bold">
-                  Latest Opportunities
+                  Latest Openings
                 </p>
 
                 <h2 className="mt-4 text-5xl font-black uppercase leading-none">
-                  Featured Jobs
+                  Qvonxpert Opportunities
                 </h2>
               </div>
 
               <div className="flex items-center gap-4">
                 <div className="border border-black bg-white h-[58px] px-6 flex items-center gap-3 uppercase text-sm font-bold">
                   <Clock3 size={16} />
-                  Newest
+                  Recently Added
                 </div>
 
                 <div className="border border-black bg-black text-white h-[58px] px-8 flex items-center uppercase text-sm tracking-[0.2em] font-bold">
-                  {filteredJobs.length} Results
+                  {filteredJobs.length} Open Roles
                 </div>
               </div>
             </div>
@@ -378,7 +379,7 @@ export default function Page() {
                         <div className="border-b lg:border-b-0 lg:border-r border-black p-8 flex flex-col justify-between">
                           <div>
                             <p className="text-xs uppercase tracking-[0.3em] font-bold">
-                              Company
+                              Employer
                             </p>
 
                             <div className="mt-6 w-16 h-16 border border-black flex items-center justify-center text-2xl font-black">
@@ -395,7 +396,7 @@ export default function Page() {
                             }`}
                           >
                             <Bookmark size={16} />
-                            Save
+                            Save Role
                           </button>
                         </div>
 
@@ -422,7 +423,7 @@ export default function Page() {
                           </h3>
 
                           <p className="mt-4 text-sm uppercase tracking-[0.2em] text-black/60">
-                            {job.createdBy?.name || "Creative Studio"}
+                            {job.createdBy?.name || "Qvonxpert Network"}
                           </p>
 
                           <p className="mt-8 text-base leading-9 text-black/70 max-w-3xl">
@@ -452,7 +453,7 @@ export default function Page() {
                         <div className="p-8 flex flex-col justify-between">
                           <div>
                             <p className="text-xs uppercase tracking-[0.3em] font-bold">
-                              Apply Today
+                              Start Your Journey
                             </p>
 
                             <h4 className="mt-6 text-5xl font-black">
@@ -468,7 +469,7 @@ export default function Page() {
                                 : "bg-black text-white hover:bg-[#d9ff65] hover:text-black"
                             }`}
                           >
-                            {isApplied ? "Applied" : "Apply Now"}
+                            {isApplied ? "Application Sent" : "Apply Now"}
 
                             <ArrowUpRight size={18} />
                           </button>
@@ -480,11 +481,11 @@ export default function Page() {
               ) : (
                 <div className="border border-black bg-white p-20 text-center">
                   <h3 className="text-6xl font-black uppercase">
-                    No Jobs
+                    No Opportunities Found
                   </h3>
 
                   <p className="mt-6 uppercase tracking-[0.2em] text-sm text-black/60">
-                    Try another search or filter combination
+                    Try adjusting your search criteria or filters
                   </p>
                 </div>
               )}
