@@ -1,15 +1,11 @@
 [build]
   base = "client"
   command = "npm run build"
-  publish = "client/.next"
+  publish = ".next"
 
 [build.environment]
-  NEXT_PUBLIC_API_URL = "$NEXT_PUBLIC_API_URL"
-  NEXT_PUBLIC_APP_BASE_URL = "$NEXT_PUBLIC_APP_BASE_URL"
-  NEXT_PUBLIC_SUPABASE_ANON_KEY = "$NEXT_PUBLIC_SUPABASE_ANON_KEY"
-  NEXT_PUBLIC_SUPABASE_URL = "$NEXT_PUBLIC_SUPABASE_URL"
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
-  NEXT_PUBLIC_CLERK_FRONTEND_API = "$NEXT_PUBLIC_CLERK_FRONTEND_API"
+  NEXT_PUBLIC_API_URL = "http://localhost:3000"
+  NEXT_PUBLIC_APP_BASE_URL = "http://localhost:3000"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
