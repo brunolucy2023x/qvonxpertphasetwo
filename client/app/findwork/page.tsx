@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -12,13 +13,12 @@ import type { Job } from "@/types/types";
 import {
   Search,
   MapPin,
-  Sparkles,
   Bookmark,
   ArrowUpRight,
   Briefcase,
-  SlidersHorizontal,
-  Flame,
   Clock3,
+  Sparkles,
+  Plus,
 } from "lucide-react";
 
 export default function Page() {
@@ -57,10 +57,7 @@ export default function Page() {
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.log(error.message);
-        return;
-      }
+      if (error) return;
 
       const mappedJobs: Job[] = (data || []).map((job: any) => ({
         _id: job.id || job._id,
@@ -183,119 +180,122 @@ export default function Page() {
   }, [jobs, debouncedSearch, location, type]);
 
   return (
-    <main className="min-h-screen bg-black text-white overflow-hidden">
+    <main className="bg-[#f4efe6] text-[#111111] min-h-screen">
       <Header />
 
       {/* =======================================================
           HERO
       ======================================================= */}
 
-      <section className="relative border-b border-white/10">
-        {/* background */}
+      <section className="border-b border-black">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 py-10">
+          <div className="grid lg:grid-cols-[1.2fr_0.8fr] border border-black">
+            {/* LEFT */}
 
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-fuchsia-600/30 blur-[150px]" />
-          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-cyan-500/20 blur-[150px]" />
-        </div>
+            <div className="p-10 lg:p-16 border-b lg:border-b-0 lg:border-r border-black">
+              <div className="flex items-center gap-2 text-xs tracking-[0.3em] uppercase font-bold">
+                <Sparkles size={14} />
+                Editorial Careers
+              </div>
 
-        <div className="relative max-w-7xl mx-auto px-6 py-24">
-          <div className="max-w-4xl">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-xl text-sm text-gray-300">
-              <Sparkles size={16} />
-              AI Powered Career Discovery
-            </div>
+              <h1 className="mt-8 text-6xl md:text-8xl font-black leading-[0.9] tracking-[-0.05em] uppercase">
+                Jobs
+                <br />
+                Reimagined
+              </h1>
 
-            <h1 className="mt-8 text-6xl md:text-7xl font-black leading-[0.95] tracking-tight">
-              Find Work
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 via-cyan-400 to-blue-500">
-                That Feels Future.
-              </span>
-            </h1>
+              <p className="mt-8 text-lg leading-9 max-w-2xl text-black/70">
+                A bold editorial inspired job platform with oversized typography,
+                newspaper grids, brutalist layouts and premium spacing.
+              </p>
 
-            <p className="mt-8 text-lg text-gray-400 leading-8 max-w-2xl">
-              Explore elite remote jobs, modern startups, and world-class tech
-              teams in a completely redesigned experience.
-            </p>
+              {/* SEARCH */}
 
-            {/* SEARCH BAR */}
+              <div className="mt-12 border border-black bg-white">
+                <div className="grid md:grid-cols-4">
+                  <div className="border-b md:border-b-0 md:border-r border-black h-[78px] px-6 flex items-center gap-4">
+                    <Search size={18} />
 
-            <div className="mt-14 rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-2xl p-5 shadow-2xl">
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                {/* search */}
+                    <input
+                      type="text"
+                      placeholder="Search"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="w-full bg-transparent outline-none font-medium"
+                    />
+                  </div>
 
-                <div className="h-[64px] rounded-2xl bg-black/40 border border-white/10 px-5 flex items-center gap-3">
-                  <Search className="text-gray-500" size={20} />
+                  <div className="border-b md:border-b-0 md:border-r border-black h-[78px] px-6 flex items-center gap-4">
+                    <MapPin size={18} />
 
-                  <input
-                    type="text"
-                    placeholder="Search futuristic jobs..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="bg-transparent w-full outline-none text-sm placeholder:text-gray-500"
-                  />
+                    <input
+                      type="text"
+                      placeholder="Location"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="w-full bg-transparent outline-none font-medium"
+                    />
+                  </div>
+
+                  <div className="border-b md:border-b-0 md:border-r border-black h-[78px] px-6 flex items-center gap-4">
+                    <Briefcase size={18} />
+
+                    <select
+                      value={type}
+                      onChange={(e) => setType(e.target.value)}
+                      className="w-full bg-transparent outline-none font-medium"
+                    >
+                      <option value="All">All Types</option>
+                      <option value="Remote">Remote</option>
+                      <option value="Full-Time">Full-Time</option>
+                      <option value="Part-Time">Part-Time</option>
+                      <option value="Contract">Contract</option>
+                    </select>
+                  </div>
+
+                  <button className="h-[78px] bg-black text-white text-sm uppercase tracking-[0.2em] font-bold hover:bg-[#222] transition">
+                    Search Jobs
+                  </button>
                 </div>
-
-                {/* location */}
-
-                <div className="h-[64px] rounded-2xl bg-black/40 border border-white/10 px-5 flex items-center gap-3">
-                  <MapPin className="text-gray-500" size={20} />
-
-                  <input
-                    type="text"
-                    placeholder="Location"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="bg-transparent w-full outline-none text-sm placeholder:text-gray-500"
-                  />
-                </div>
-
-                {/* type */}
-
-                <div className="h-[64px] rounded-2xl bg-black/40 border border-white/10 px-5 flex items-center gap-3">
-                  <Briefcase className="text-gray-500" size={20} />
-
-                  <select
-                    value={type}
-                    onChange={(e) => setType(e.target.value)}
-                    className="bg-transparent w-full outline-none text-sm text-gray-300"
-                  >
-                    <option value="All">All Types</option>
-                    <option value="Remote">Remote</option>
-                    <option value="Full-Time">Full-Time</option>
-                    <option value="Part-Time">Part-Time</option>
-                    <option value="Contract">Contract</option>
-                  </select>
-                </div>
-
-                {/* button */}
-
-                <button className="h-[64px] rounded-2xl bg-gradient-to-r from-fuchsia-500 via-purple-500 to-cyan-500 text-white font-semibold hover:scale-[1.02] transition-all duration-300 shadow-[0_0_40px_rgba(168,85,247,0.5)]">
-                  Explore Jobs
-                </button>
               </div>
             </div>
 
-            {/* STATS */}
+            {/* RIGHT */}
 
-            <div className="mt-14 flex flex-wrap gap-10">
+            <div className="bg-[#d9ff65] p-10 lg:p-16 flex flex-col justify-between">
               <div>
-                <h3 className="text-4xl font-black">12K+</h3>
-                <p className="text-gray-500 mt-2 text-sm">
-                  Active Opportunities
+                <p className="text-xs uppercase tracking-[0.3em] font-bold">
+                  Weekly Stats
                 </p>
+
+                <div className="mt-10 space-y-10">
+                  <div>
+                    <h2 className="text-6xl font-black">14K+</h2>
+                    <p className="mt-2 text-sm uppercase tracking-[0.2em]">
+                      Open Positions
+                    </p>
+                  </div>
+
+                  <div>
+                    <h2 className="text-6xl font-black">1.2K</h2>
+                    <p className="mt-2 text-sm uppercase tracking-[0.2em]">
+                      Companies Hiring
+                    </p>
+                  </div>
+
+                  <div>
+                    <h2 className="text-6xl font-black">92%</h2>
+                    <p className="mt-2 text-sm uppercase tracking-[0.2em]">
+                      Remote Friendly
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <h3 className="text-4xl font-black">4.8★</h3>
-                <p className="text-gray-500 mt-2 text-sm">
-                  Candidate Satisfaction
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-4xl font-black">850+</h3>
-                <p className="text-gray-500 mt-2 text-sm">
-                  Startup Companies
+              <div className="mt-14 border-t border-black pt-8">
+                <p className="text-sm leading-8 uppercase tracking-[0.2em]">
+                  Modern careers for designers, developers, marketers and future
+                  teams.
                 </p>
               </div>
             </div>
@@ -304,195 +304,191 @@ export default function Page() {
       </section>
 
       {/* =======================================================
-          CONTENT
+          BODY
       ======================================================= */}
 
-      <section className="max-w-7xl mx-auto px-6 py-16">
-        {/* TOP BAR */}
-
-        <div className="flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between mb-10">
-          <div>
-            <div className="flex items-center gap-2 text-fuchsia-400 text-sm mb-3">
-              <Flame size={16} />
-              Trending Careers
-            </div>
-
-            <h2 className="text-4xl font-black">
-              Discover Opportunities
-            </h2>
-
-            <p className="text-gray-500 mt-3">
-              {filteredJobs.length} jobs available worldwide
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <button className="h-[52px] px-5 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2 hover:bg-white/10 transition">
-              <Clock3 size={16} />
-              Newest
-            </button>
-
-            <button className="h-[52px] px-5 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2 hover:bg-white/10 transition">
-              <SlidersHorizontal size={16} />
-              Filters
-            </button>
-          </div>
-        </div>
-
-        {/* LAYOUT */}
-
-        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
+      <section className="max-w-[1600px] mx-auto px-6 lg:px-12 py-12">
+        <div className="grid lg:grid-cols-[280px_1fr] gap-10">
           {/* SIDEBAR */}
 
           <aside>
-            <div className="sticky top-24 rounded-[30px] border border-white/10 bg-white/5 backdrop-blur-2xl p-6">
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="text-xl font-bold">Advanced Filters</h3>
+            <div className="border border-black bg-white sticky top-24">
+              <div className="border-b border-black p-6 flex items-center justify-between">
+                <h3 className="text-xl font-black uppercase">
+                  Filters
+                </h3>
 
-                <SlidersHorizontal size={18} className="text-gray-400" />
+                <Plus size={18} />
               </div>
 
-              <Filters />
+              <div className="p-6">
+                <Filters />
+              </div>
             </div>
           </aside>
 
-          {/* JOBS */}
+          {/* CONTENT */}
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-7">
-            {filteredJobs.length > 0 ? (
-              filteredJobs.map((job) => {
-                const isSaved = savedJobs.includes(job._id);
-                const isApplied = appliedJobs.includes(job._id);
+          <div>
+            {/* TOP */}
 
-                return (
-                  <div
-                    key={job._id}
-                    className="group relative rounded-[34px] border border-white/10 bg-gradient-to-b from-white/10 to-white/[0.03] backdrop-blur-2xl overflow-hidden hover:border-fuchsia-500/40 transition-all duration-500"
-                  >
-                    {/* glow */}
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 border-b border-black pb-8">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] font-bold">
+                  Latest Opportunities
+                </p>
 
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-r from-fuchsia-500/10 via-transparent to-cyan-500/10" />
+                <h2 className="mt-4 text-5xl font-black uppercase leading-none">
+                  Featured Jobs
+                </h2>
+              </div>
 
-                    <div className="relative p-7">
-                      {/* top */}
+              <div className="flex items-center gap-4">
+                <div className="border border-black bg-white h-[58px] px-6 flex items-center gap-3 uppercase text-sm font-bold">
+                  <Clock3 size={16} />
+                  Newest
+                </div>
 
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-center gap-5">
-                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-cyan-500 flex items-center justify-center text-2xl font-black shadow-lg">
-                            {job.title?.charAt(0)}
-                          </div>
+                <div className="border border-black bg-black text-white h-[58px] px-8 flex items-center uppercase text-sm tracking-[0.2em] font-bold">
+                  {filteredJobs.length} Results
+                </div>
+              </div>
+            </div>
 
+            {/* JOB LIST */}
+
+            <div className="mt-10 space-y-8">
+              {filteredJobs.length > 0 ? (
+                filteredJobs.map((job, index) => {
+                  const isSaved = savedJobs.includes(job._id);
+                  const isApplied = appliedJobs.includes(job._id);
+
+                  return (
+                    <div
+                      key={job._id}
+                      className={`border border-black ${
+                        index % 2 === 0
+                          ? "bg-white"
+                          : "bg-[#efe7da]"
+                      }`}
+                    >
+                      <div className="grid lg:grid-cols-[220px_1fr_220px]">
+                        {/* LEFT */}
+
+                        <div className="border-b lg:border-b-0 lg:border-r border-black p-8 flex flex-col justify-between">
                           <div>
-                            <h3 className="text-2xl font-bold leading-tight">
-                              {job.title}
-                            </h3>
-
-                            <p className="text-gray-400 mt-2">
-                              {job.createdBy?.name || "Modern Company"}
+                            <p className="text-xs uppercase tracking-[0.3em] font-bold">
+                              Company
                             </p>
 
-                            <div className="flex flex-wrap gap-2 mt-4">
-                              <span className="px-3 py-1 rounded-full bg-fuchsia-500/10 text-fuchsia-300 text-xs border border-fuchsia-500/20">
-                                {job.location || "Remote"}
-                              </span>
-
-                              {job.jobType?.slice(0, 2).map((item, index) => (
-                                <span
-                                  key={index}
-                                  className="px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-300 text-xs border border-cyan-500/20"
-                                >
-                                  {item}
-                                </span>
-                              ))}
+                            <div className="mt-6 w-16 h-16 border border-black flex items-center justify-center text-2xl font-black">
+                              {job.title?.charAt(0)}
                             </div>
+                          </div>
+
+                          <button
+                            onClick={() => toggleSave(job._id)}
+                            className={`mt-10 h-[52px] border border-black flex items-center justify-center gap-2 uppercase text-xs tracking-[0.2em] font-bold transition ${
+                              isSaved
+                                ? "bg-black text-white"
+                                : "bg-transparent hover:bg-black hover:text-white"
+                            }`}
+                          >
+                            <Bookmark size={16} />
+                            Save
+                          </button>
+                        </div>
+
+                        {/* CENTER */}
+
+                        <div className="p-8 border-b lg:border-b-0 lg:border-r border-black">
+                          <div className="flex flex-wrap gap-3">
+                            <span className="border border-black px-4 py-2 text-xs uppercase tracking-[0.2em] font-bold">
+                              {job.location || "Remote"}
+                            </span>
+
+                            {job.jobType?.slice(0, 2).map((item, i) => (
+                              <span
+                                key={i}
+                                className="border border-black px-4 py-2 text-xs uppercase tracking-[0.2em] font-bold"
+                              >
+                                {item}
+                              </span>
+                            ))}
+                          </div>
+
+                          <h3 className="mt-8 text-4xl font-black uppercase leading-tight">
+                            {job.title}
+                          </h3>
+
+                          <p className="mt-4 text-sm uppercase tracking-[0.2em] text-black/60">
+                            {job.createdBy?.name || "Creative Studio"}
+                          </p>
+
+                          <p className="mt-8 text-base leading-9 text-black/70 max-w-3xl">
+                            {job.description}
+                          </p>
+
+                          {/* TAGS */}
+
+                          <div className="flex flex-wrap gap-3 mt-10">
+                            {job.tags?.slice(0, 5).map((tag, i) => (
+                              <span
+                                key={i}
+                                className="text-xs uppercase tracking-[0.15em] border border-black px-4 py-2"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+
+                          <div className="mt-10">
+                            <JobCard job={job} />
                           </div>
                         </div>
 
-                        {/* save */}
+                        {/* RIGHT */}
 
-                        <button
-                          onClick={() => toggleSave(job._id)}
-                          className={`w-12 h-12 rounded-2xl flex items-center justify-center transition ${
-                            isSaved
-                              ? "bg-yellow-400 text-black"
-                              : "bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10"
-                          }`}
-                        >
-                          <Bookmark size={18} />
-                        </button>
-                      </div>
+                        <div className="p-8 flex flex-col justify-between">
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.3em] font-bold">
+                              Apply Today
+                            </p>
 
-                      {/* description */}
+                            <h4 className="mt-6 text-5xl font-black">
+                              →
+                            </h4>
+                          </div>
 
-                      <p className="mt-8 text-gray-400 leading-8 text-sm">
-                        {job.description}
-                      </p>
-
-                      {/* tags */}
-
-                      <div className="flex flex-wrap gap-3 mt-8">
-                        {job.tags?.slice(0, 5).map((tag, index) => (
-                          <span
-                            key={index}
-                            className="px-4 py-2 rounded-2xl bg-black/40 border border-white/10 text-xs text-gray-300"
+                          <button
+                            onClick={() => applyJob(job._id)}
+                            className={`h-[64px] w-full border border-black uppercase tracking-[0.2em] text-sm font-black transition flex items-center justify-center gap-3 ${
+                              isApplied
+                                ? "bg-[#d9ff65]"
+                                : "bg-black text-white hover:bg-[#d9ff65] hover:text-black"
+                            }`}
                           >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
+                            {isApplied ? "Applied" : "Apply Now"}
 
-                      {/* custom card */}
-
-                      <div className="mt-8">
-                        <JobCard job={job} />
-                      </div>
-
-                      {/* footer */}
-
-                      <div className="mt-10 flex items-center justify-between">
-                        <div>
-                          <p className="text-gray-500 text-xs uppercase tracking-[0.2em]">
-                            Hiring Now
-                          </p>
-
-                          <h4 className="mt-2 text-lg font-bold">
-                            Apply Instantly
-                          </h4>
+                            <ArrowUpRight size={18} />
+                          </button>
                         </div>
-
-                        <button
-                          onClick={() => applyJob(job._id)}
-                          className={`h-[54px] px-7 rounded-2xl font-semibold transition-all duration-300 flex items-center gap-3 ${
-                            isApplied
-                              ? "bg-green-500 text-black"
-                              : "bg-white text-black hover:bg-fuchsia-500 hover:text-white"
-                          }`}
-                        >
-                          {isApplied ? "Applied" : "Apply Now"}
-
-                          <ArrowUpRight size={18} />
-                        </button>
                       </div>
                     </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="col-span-full rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-2xl p-20 text-center">
-                <Search
-                  size={60}
-                  className="mx-auto text-gray-700 mb-6"
-                />
+                  );
+                })
+              ) : (
+                <div className="border border-black bg-white p-20 text-center">
+                  <h3 className="text-6xl font-black uppercase">
+                    No Jobs
+                  </h3>
 
-                <h3 className="text-4xl font-black">
-                  No Jobs Found
-                </h3>
-
-                <p className="text-gray-500 mt-5">
-                  Try changing your filters or search query.
-                </p>
-              </div>
-            )}
+                  <p className="mt-6 uppercase tracking-[0.2em] text-sm text-black/60">
+                    Try another search or filter combination
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
