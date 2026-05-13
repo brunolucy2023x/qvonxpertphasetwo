@@ -9,7 +9,6 @@ import { useGlobalContext } from "@/context/globalContext";
 import { useJobsContext } from "@/context/jobsContext";
 
 import { Job } from "@/types/types";
-
 import { Separator } from "../ui/separator";
 
 import formatMoney from "@/utils/formatMoney";
@@ -32,30 +31,20 @@ function JobCard({ job, activeJob }: JobProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [loadingLike, setLoadingLike] = useState(false);
 
-  // ✅ SUPABASE USER ID
   const userId = userProfile?.auth0_id || userProfile?.id;
-
-  // ✅ SUPABASE JOB ID
   const jobId = job._id;
 
-  const {
-    title,
-    salaryType,
-    salary,
-    createdBy,
-    applicants,
-    jobType,
-    createdAt,
-  } = job;
+  const { title, salaryType, salary, createdBy, applicants, jobType, createdAt } = job;
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_BASE_URL || "http://localhost:3000";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_BASE_URL || "http://localhost:3000";
 
   // =========================
   // CHECK LIKE STATUS
   // =========================
   useEffect(() => {
     const fetchLikeStatus = async () => {
-      if (!userId || !jobId) return;
+      if (!userId || !jobId || !supabase) return; // ✅ FIX HERE
 
       const { data, error } = await supabase
         .from("job_likes")
@@ -79,7 +68,7 @@ function JobCard({ job, activeJob }: JobProps) {
   // LIKE / UNLIKE
   // =========================
   const handleLike = async () => {
-    if (!userId || !jobId || loadingLike) return;
+    if (!userId || !jobId || loadingLike || !supabase) return; // ✅ FIX HERE
 
     if (!isAuthenticated) {
       router.push(`${baseUrl}/login?redirect=/job/${jobId}`);
@@ -119,7 +108,9 @@ function JobCard({ job, activeJob }: JobProps) {
 
   const companyName = createdBy?.name || "Company";
   const companyImage = createdBy?.profilePicture || "/user.png";
-  const companyDescription = "Modern job opportunity posted on QvonXpert marketplace.";
+
+  const companyDescription =
+    "Modern job opportunity posted on QvonXpert marketplace.";
 
   const jobTypeBg = (type: string) => {
     switch (type) {
@@ -164,7 +155,9 @@ function JobCard({ job, activeJob }: JobProps) {
         <button
           disabled={loadingLike}
           onClick={handleLike}
-          className={`text-2xl ${isLiked ? "text-[#7263f3]" : "text-gray-400"}`}
+          className={`text-2xl ${
+            isLiked ? "text-[#7263f3]" : "text-gray-400"
+          }`}
         >
           {isLiked ? bookmark : bookmarkEmpty}
         </button>
