@@ -12,36 +12,31 @@ import type { Job } from "@/types/types";
 import {
   Search,
   MapPin,
-  Briefcase,
-  LayoutGrid,
-  Rows3,
+  Sparkles,
   Bookmark,
-  Clock3,
-  ChevronDown,
+  ArrowUpRight,
+  Briefcase,
   SlidersHorizontal,
-  ArrowRight,
+  Flame,
+  Clock3,
 } from "lucide-react";
 
 export default function Page() {
   const { userProfile } = useGlobalContext();
 
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [columns, setColumns] = useState<number>(3);
-
-  const [search, setSearch] = useState<string>("");
-  const [location, setLocation] = useState<string>("");
-  const [type, setType] = useState<string>("All");
-
-  const [sort, setSort] = useState<string>("newest");
+  const [search, setSearch] = useState("");
+  const [location, setLocation] = useState("");
+  const [type, setType] = useState("All");
 
   const [savedJobs, setSavedJobs] = useState<string[]>([]);
   const [appliedJobs, setAppliedJobs] = useState<string[]>([]);
 
-  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  /* =========================================================
-     SEARCH DEBOUNCE
-  ========================================================= */
+  /* =======================================================
+      SEARCH DEBOUNCE
+  ======================================================= */
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -51,9 +46,9 @@ export default function Page() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  /* =========================================================
-     FETCH JOBS
-  ========================================================= */
+  /* =======================================================
+      FETCH JOBS
+  ======================================================= */
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -64,7 +59,6 @@ export default function Page() {
 
       if (error) {
         console.log(error.message);
-        setJobs([]);
         return;
       }
 
@@ -96,9 +90,9 @@ export default function Page() {
     fetchJobs();
   }, []);
 
-  /* =========================================================
-     FETCH SAVED + APPLIED
-  ========================================================= */
+  /* =======================================================
+      FETCH USER DATA
+  ======================================================= */
 
   useEffect(() => {
     if (!userProfile?._id) return;
@@ -122,9 +116,9 @@ export default function Page() {
     fetchUserData();
   }, [userProfile?._id]);
 
-  /* =========================================================
-     SAVE JOB
-  ========================================================= */
+  /* =======================================================
+      SAVE JOB
+  ======================================================= */
 
   const toggleSave = async (jobId: string) => {
     if (!userProfile?._id) return;
@@ -147,9 +141,9 @@ export default function Page() {
     }
   };
 
-  /* =========================================================
-     APPLY JOB
-  ========================================================= */
+  /* =======================================================
+      APPLY JOB
+  ======================================================= */
 
   const applyJob = async (jobId: string) => {
     if (!userProfile?._id) return;
@@ -164,9 +158,9 @@ export default function Page() {
     }
   };
 
-  /* =========================================================
-     FILTER JOBS
-  ========================================================= */
+  /* =======================================================
+      FILTER JOBS
+  ======================================================= */
 
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
@@ -188,89 +182,82 @@ export default function Page() {
     });
   }, [jobs, debouncedSearch, location, type]);
 
-  /* =========================================================
-     SORT JOBS
-  ========================================================= */
-
-  const sortedJobs = useMemo(() => {
-    return [...filteredJobs].sort((a, b) => {
-      if (sort === "newest") {
-        return (
-          new Date(b.createdAt).getTime() -
-          new Date(a.createdAt).getTime()
-        );
-      }
-
-      return 0;
-    });
-  }, [filteredJobs, sort]);
-
   return (
-    <main className="min-h-screen bg-[#f5f7fb] text-gray-900">
+    <main className="min-h-screen bg-black text-white overflow-hidden">
       <Header />
 
-      {/* =========================================================
-          HERO SECTION
-      ========================================================= */}
+      {/* =======================================================
+          HERO
+      ======================================================= */}
 
-      <section className="border-b border-gray-200 bg-white">
-        <div className="max-w-7xl mx-auto px-5 py-14">
-          <div className="max-w-3xl">
-            <span className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-600 text-sm font-medium px-4 py-2 rounded-full">
-              <Briefcase size={16} />
-              Find Better Opportunities
-            </span>
+      <section className="relative border-b border-white/10">
+        {/* background */}
 
-            <h1 className="mt-6 text-4xl md:text-5xl font-bold leading-tight text-gray-900">
-              Discover Your Next Career Move
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-fuchsia-600/30 blur-[150px]" />
+          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-cyan-500/20 blur-[150px]" />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-6 py-24">
+          <div className="max-w-4xl">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-xl text-sm text-gray-300">
+              <Sparkles size={16} />
+              AI Powered Career Discovery
+            </div>
+
+            <h1 className="mt-8 text-6xl md:text-7xl font-black leading-[0.95] tracking-tight">
+              Find Work
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 via-cyan-400 to-blue-500">
+                That Feels Future.
+              </span>
             </h1>
 
-            <p className="mt-5 text-gray-600 text-base leading-7">
-              Browse top opportunities from leading companies and apply with a
-              modern streamlined experience.
+            <p className="mt-8 text-lg text-gray-400 leading-8 max-w-2xl">
+              Explore elite remote jobs, modern startups, and world-class tech
+              teams in a completely redesigned experience.
             </p>
 
             {/* SEARCH BAR */}
 
-            <div className="mt-10 bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
+            <div className="mt-14 rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-2xl p-5 shadow-2xl">
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                {/* SEARCH */}
+                {/* search */}
 
-                <div className="flex items-center gap-3 border border-gray-200 rounded-xl px-4 h-[54px]">
-                  <Search size={18} className="text-gray-400" />
+                <div className="h-[64px] rounded-2xl bg-black/40 border border-white/10 px-5 flex items-center gap-3">
+                  <Search className="text-gray-500" size={20} />
 
                   <input
                     type="text"
-                    placeholder="Search jobs"
+                    placeholder="Search futuristic jobs..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full bg-transparent outline-none text-sm"
+                    className="bg-transparent w-full outline-none text-sm placeholder:text-gray-500"
                   />
                 </div>
 
-                {/* LOCATION */}
+                {/* location */}
 
-                <div className="flex items-center gap-3 border border-gray-200 rounded-xl px-4 h-[54px]">
-                  <MapPin size={18} className="text-gray-400" />
+                <div className="h-[64px] rounded-2xl bg-black/40 border border-white/10 px-5 flex items-center gap-3">
+                  <MapPin className="text-gray-500" size={20} />
 
                   <input
                     type="text"
                     placeholder="Location"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    className="w-full bg-transparent outline-none text-sm"
+                    className="bg-transparent w-full outline-none text-sm placeholder:text-gray-500"
                   />
                 </div>
 
-                {/* TYPE */}
+                {/* type */}
 
-                <div className="flex items-center gap-3 border border-gray-200 rounded-xl px-4 h-[54px]">
-                  <Briefcase size={18} className="text-gray-400" />
+                <div className="h-[64px] rounded-2xl bg-black/40 border border-white/10 px-5 flex items-center gap-3">
+                  <Briefcase className="text-gray-500" size={20} />
 
                   <select
                     value={type}
                     onChange={(e) => setType(e.target.value)}
-                    className="w-full bg-transparent outline-none text-sm"
+                    className="bg-transparent w-full outline-none text-sm text-gray-300"
                   >
                     <option value="All">All Types</option>
                     <option value="Remote">Remote</option>
@@ -280,233 +267,210 @@ export default function Page() {
                   </select>
                 </div>
 
-                {/* BUTTON */}
+                {/* button */}
 
-                <button className="h-[54px] rounded-xl bg-indigo-600 hover:bg-indigo-700 transition text-white text-sm font-medium">
-                  Search Jobs
+                <button className="h-[64px] rounded-2xl bg-gradient-to-r from-fuchsia-500 via-purple-500 to-cyan-500 text-white font-semibold hover:scale-[1.02] transition-all duration-300 shadow-[0_0_40px_rgba(168,85,247,0.5)]">
+                  Explore Jobs
                 </button>
+              </div>
+            </div>
+
+            {/* STATS */}
+
+            <div className="mt-14 flex flex-wrap gap-10">
+              <div>
+                <h3 className="text-4xl font-black">12K+</h3>
+                <p className="text-gray-500 mt-2 text-sm">
+                  Active Opportunities
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-4xl font-black">4.8★</h3>
+                <p className="text-gray-500 mt-2 text-sm">
+                  Candidate Satisfaction
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-4xl font-black">850+</h3>
+                <p className="text-gray-500 mt-2 text-sm">
+                  Startup Companies
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* =========================================================
-          MAIN SECTION
-      ========================================================= */}
+      {/* =======================================================
+          CONTENT
+      ======================================================= */}
 
-      <section className="max-w-7xl mx-auto px-5 py-10">
+      <section className="max-w-7xl mx-auto px-6 py-16">
         {/* TOP BAR */}
 
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 mb-8">
-          {/* LEFT */}
-
+        <div className="flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between mb-10">
           <div>
-            <h2 className="text-2xl font-semibold text-gray-900">
-              Available Jobs
+            <div className="flex items-center gap-2 text-fuchsia-400 text-sm mb-3">
+              <Flame size={16} />
+              Trending Careers
+            </div>
+
+            <h2 className="text-4xl font-black">
+              Discover Opportunities
             </h2>
 
-            <p className="text-sm text-gray-500 mt-1">
-              {sortedJobs.length} opportunities available
+            <p className="text-gray-500 mt-3">
+              {filteredJobs.length} jobs available worldwide
             </p>
           </div>
 
-          {/* RIGHT */}
+          <div className="flex items-center gap-4">
+            <button className="h-[52px] px-5 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2 hover:bg-white/10 transition">
+              <Clock3 size={16} />
+              Newest
+            </button>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* SORT */}
-
-            <div className="flex items-center gap-2 border border-gray-200 bg-white px-4 h-[48px] rounded-xl">
-              <Clock3 size={16} className="text-gray-400" />
-
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                className="outline-none bg-transparent text-sm"
-              >
-                <option value="newest">Newest</option>
-                <option value="relevant">Relevant</option>
-              </select>
-
-              <ChevronDown size={16} className="text-gray-400" />
-            </div>
-
-            {/* GRID TOGGLE */}
-
-            <div className="flex items-center border border-gray-200 bg-white rounded-xl overflow-hidden">
-              <button
-                onClick={() => setColumns(3)}
-                className={`w-12 h-12 flex items-center justify-center ${
-                  columns === 3
-                    ? "bg-indigo-600 text-white"
-                    : "text-gray-600"
-                }`}
-              >
-                <LayoutGrid size={18} />
-              </button>
-
-              <button
-                onClick={() => setColumns(2)}
-                className={`w-12 h-12 flex items-center justify-center ${
-                  columns === 2
-                    ? "bg-indigo-600 text-white"
-                    : "text-gray-600"
-                }`}
-              >
-                <Rows3 size={18} />
-              </button>
-            </div>
-
-            {/* FILTER BUTTON */}
-
-            <button className="h-[48px] px-5 rounded-xl border border-gray-200 bg-white flex items-center gap-2 text-sm font-medium hover:bg-gray-50 transition">
+            <button className="h-[52px] px-5 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2 hover:bg-white/10 transition">
               <SlidersHorizontal size={16} />
               Filters
             </button>
           </div>
         </div>
 
-        {/* CONTENT */}
+        {/* LAYOUT */}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
           {/* SIDEBAR */}
 
           <aside>
-            <div className="bg-white border border-gray-200 rounded-2xl p-5 sticky top-24">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="font-semibold text-lg">Filters</h3>
+            <div className="sticky top-24 rounded-[30px] border border-white/10 bg-white/5 backdrop-blur-2xl p-6">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-xl font-bold">Advanced Filters</h3>
 
-                <SlidersHorizontal size={18} className="text-gray-500" />
+                <SlidersHorizontal size={18} className="text-gray-400" />
               </div>
 
               <Filters />
             </div>
           </aside>
 
-          {/* JOB LIST */}
+          {/* JOBS */}
 
-          <div
-            className={`grid gap-6 ${
-              columns === 3
-                ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
-                : "grid-cols-1 md:grid-cols-2"
-            }`}
-          >
-            {sortedJobs.length > 0 ? (
-              sortedJobs.map((job) => {
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-7">
+            {filteredJobs.length > 0 ? (
+              filteredJobs.map((job) => {
                 const isSaved = savedJobs.includes(job._id);
-
                 const isApplied = appliedJobs.includes(job._id);
 
                 return (
                   <div
                     key={job._id}
-                    className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition duration-300"
+                    className="group relative rounded-[34px] border border-white/10 bg-gradient-to-b from-white/10 to-white/[0.03] backdrop-blur-2xl overflow-hidden hover:border-fuchsia-500/40 transition-all duration-500"
                   >
-                    {/* HEADER */}
+                    {/* glow */}
 
-                    <div className="p-5 border-b border-gray-100">
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-r from-fuchsia-500/10 via-transparent to-cyan-500/10" />
+
+                    <div className="relative p-7">
+                      {/* top */}
+
                       <div className="flex items-start justify-between gap-4">
-                        <div className="flex gap-4">
-                          {/* AVATAR */}
-
-                          <div className="w-14 h-14 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-semibold text-lg shrink-0">
+                        <div className="flex items-center gap-5">
+                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-cyan-500 flex items-center justify-center text-2xl font-black shadow-lg">
                             {job.title?.charAt(0)}
                           </div>
 
-                          {/* TITLE */}
-
                           <div>
-                            <h3 className="font-semibold text-base text-gray-900 leading-6">
+                            <h3 className="text-2xl font-bold leading-tight">
                               {job.title}
                             </h3>
 
-                            <p className="text-sm text-gray-500 mt-1">
-                              {job.createdBy?.name || "Company"}
+                            <p className="text-gray-400 mt-2">
+                              {job.createdBy?.name || "Modern Company"}
                             </p>
 
-                            <div className="flex items-center gap-2 mt-3 flex-wrap">
-                              <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
+                            <div className="flex flex-wrap gap-2 mt-4">
+                              <span className="px-3 py-1 rounded-full bg-fuchsia-500/10 text-fuchsia-300 text-xs border border-fuchsia-500/20">
                                 {job.location || "Remote"}
                               </span>
 
-                              {job.jobType?.slice(0, 2).map((type, index) => (
+                              {job.jobType?.slice(0, 2).map((item, index) => (
                                 <span
                                   key={index}
-                                  className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full"
+                                  className="px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-300 text-xs border border-cyan-500/20"
                                 >
-                                  {type}
+                                  {item}
                                 </span>
                               ))}
                             </div>
                           </div>
                         </div>
 
-                        {/* SAVE */}
+                        {/* save */}
 
                         <button
                           onClick={() => toggleSave(job._id)}
-                          className={`w-10 h-10 rounded-lg flex items-center justify-center transition ${
+                          className={`w-12 h-12 rounded-2xl flex items-center justify-center transition ${
                             isSaved
-                              ? "bg-yellow-100 text-yellow-600"
-                              : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                              ? "bg-yellow-400 text-black"
+                              : "bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10"
                           }`}
                         >
                           <Bookmark size={18} />
                         </button>
                       </div>
-                    </div>
 
-                    {/* BODY */}
+                      {/* description */}
 
-                    <div className="p-5">
-                      <p className="text-sm text-gray-600 leading-7 line-clamp-3">
+                      <p className="mt-8 text-gray-400 leading-8 text-sm">
                         {job.description}
                       </p>
 
-                      {/* TAGS */}
+                      {/* tags */}
 
-                      <div className="flex flex-wrap gap-2 mt-5">
-                        {job.tags?.slice(0, 4).map((tag, index) => (
+                      <div className="flex flex-wrap gap-3 mt-8">
+                        {job.tags?.slice(0, 5).map((tag, index) => (
                           <span
                             key={index}
-                            className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-lg"
+                            className="px-4 py-2 rounded-2xl bg-black/40 border border-white/10 text-xs text-gray-300"
                           >
                             #{tag}
                           </span>
                         ))}
                       </div>
 
-                      {/* CUSTOM COMPONENT */}
+                      {/* custom card */}
 
-                      <div className="mt-5">
+                      <div className="mt-8">
                         <JobCard job={job} />
                       </div>
 
-                      {/* FOOTER */}
+                      {/* footer */}
 
-                      <div className="mt-6 flex items-center justify-between gap-4">
+                      <div className="mt-10 flex items-center justify-between">
                         <div>
-                          <p className="text-xs text-gray-400">
-                            Recently Posted
+                          <p className="text-gray-500 text-xs uppercase tracking-[0.2em]">
+                            Hiring Now
                           </p>
 
-                          <p className="text-sm font-medium text-gray-800 mt-1">
-                            Apply Today
-                          </p>
+                          <h4 className="mt-2 text-lg font-bold">
+                            Apply Instantly
+                          </h4>
                         </div>
 
                         <button
                           onClick={() => applyJob(job._id)}
-                          className={`h-[44px] px-5 rounded-xl text-sm font-medium transition flex items-center gap-2 ${
+                          className={`h-[54px] px-7 rounded-2xl font-semibold transition-all duration-300 flex items-center gap-3 ${
                             isApplied
-                              ? "bg-green-100 text-green-700"
-                              : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                              ? "bg-green-500 text-black"
+                              : "bg-white text-black hover:bg-fuchsia-500 hover:text-white"
                           }`}
                         >
-                          {isApplied ? "Applied" : "Apply"}
+                          {isApplied ? "Applied" : "Apply Now"}
 
-                          <ArrowRight size={16} />
+                          <ArrowUpRight size={18} />
                         </button>
                       </div>
                     </div>
@@ -514,18 +478,18 @@ export default function Page() {
                 );
               })
             ) : (
-              <div className="col-span-full bg-white border border-gray-200 rounded-2xl p-16 text-center">
+              <div className="col-span-full rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-2xl p-20 text-center">
                 <Search
-                  size={50}
-                  className="mx-auto text-gray-300 mb-5"
+                  size={60}
+                  className="mx-auto text-gray-700 mb-6"
                 />
 
-                <h3 className="text-2xl font-semibold text-gray-800">
+                <h3 className="text-4xl font-black">
                   No Jobs Found
                 </h3>
 
-                <p className="text-gray-500 mt-3 text-sm">
-                  Try adjusting your search filters.
+                <p className="text-gray-500 mt-5">
+                  Try changing your filters or search query.
                 </p>
               </div>
             )}
