@@ -5,189 +5,140 @@ import { useParams } from "next/navigation";
 import Header from "@/Components/Header";
 import Footer from "@/Components/Footer";
 import { supabase } from "@/lib/supabase";
-import { useGlobalContext } from "@/context/globalContext";
-import type { Job } from "@/types/types";
+import { Job } from "@/types/types";
+import { ArrowUpRight } from "lucide-react";
 
 export default function ApplyNowPage() {
-  const { userProfile } = useGlobalContext();
-  const { jobId } = useParams(); // Assuming route is like /apply-now/[jobId]
+  const params = useParams();
+  const jobId = params?.jobId;
+
   const [job, setJob] = useState<Job | null>(null);
-  const [isApplied, setIsApplied] = useState(false);
-  const [coverLetter, setCoverLetter] = useState("");
-  const [resumeFile, setResumeFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [applied, setApplied] = useState(false);
 
   /* =======================================================
-      FETCH JOB DETAILS
+      FETCH JOB BY ID
   ======================================================= */
   useEffect(() => {
     if (!jobId) return;
 
     const fetchJob = async () => {
-      const { data, error } = await supabase
-        .from("jobs")
-        .select("*")
-        .eq("id", jobId)
-        .single();
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("jobs")
+          .select("*")
+          .eq("id", jobId)
+          .single();
 
-      if (error) {
-        console.error(error);
-        return;
+        if (error || !data) {
+          setError("Job not found");
+          setLoading(false);
+          return;
+        }
+
+        // Type-safe mapping
+        const mappedJob: Job = {
+          _id: data.id,
+          title: data.title || "",
+          description: data.description || "",
+          location: data.location || "Remote",
+          salary: data.salary || 0,
+          salaryType: data.salary_type || "Yearly",
+          negotiable: data.negotiable || false,
+          jobType: data.job_type || [],
+          tags: data.tags || [],
+          skills: data.skills || [],
+          applicants: data.applicants || [],
+          likes: data.likes || [], // MUST include to satisfy TS
+          createdBy: data.created_by || { _id: "", name: "", profilePicture: "" },
+          createdAt: data.created_at || new Date().toISOString(),
+          updatedAt: data.updated_at || new Date().toISOString(),
+        };
+
+        setJob(mappedJob);
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to fetch job data");
+        setLoading(false);
       }
-
-      setJob({
-        _id: data.id,
-        title: data.title,
-        description: data.description,
-        location: data.location,
-        salary: data.salary,
-        salaryType: data.salary_type,
-        negotiable: data.negotiable,
-        jobType: data.job_type,
-        tags: data.tags,
-        skills: data.skills,
-        applicants: data.applicants,
-        createdBy: data.created_by || { _id: "", profilePicture: "", name: "" },
-        createdAt: data.created_at,
-        updatedAt: data.updated_at,
-      });
     };
 
     fetchJob();
   }, [jobId]);
 
   /* =======================================================
-      CHECK IF USER ALREADY APPLIED
-  ======================================================= */
-  useEffect(() => {
-    if (!userProfile?._id || !jobId) return;
-
-    const checkApplied = async () => {
-      const { data } = await supabase
-        .from("applied_jobs")
-        .select("job_id")
-        .eq("user_id", userProfile._id)
-        .eq("job_id", jobId)
-        .single();
-
-      setIsApplied(!!data);
-    };
-
-    checkApplied();
-  }, [userProfile?._id, jobId]);
-
-  /* =======================================================
-      HANDLE APPLICATION SUBMISSION
+      APPLY TO JOB
   ======================================================= */
   const handleApply = async () => {
-    if (!userProfile?._id || !job) return;
-    setLoading(true);
+    if (!job) return;
 
     try {
-      // Upload resume if exists
-      let resumeUrl = "";
-      if (resumeFile) {
-        const { data, error } = await supabase.storage
-          .from("resumes")
-          .upload(`user_${userProfile._id}/${resumeFile.name}`, resumeFile, {
-            cacheControl: "3600",
-            upsert: true,
-          });
-
-        if (error) throw error;
-        resumeUrl = data?.path || "";
-      }
-
-      // Insert application
       await supabase.from("applied_jobs").insert({
-        user_id: userProfile._id,
+        user_id: "CURRENT_USER_ID", // replace with actual logged-in user ID
         job_id: job._id,
-        cover_letter: coverLetter,
-        resume_url: resumeUrl,
       });
 
-      setIsApplied(true);
-      alert("Your application has been submitted!");
-    } catch (error) {
-      console.error(error);
-      alert("Failed to submit application. Try again.");
-    } finally {
-      setLoading(false);
+      setApplied(true);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to apply for the job");
     }
   };
 
-  if (!job) {
+  if (loading) {
     return (
-      <main className="min-h-screen flex flex-col">
-        <Header />
-        <div className="flex-grow flex items-center justify-center">
-          <p className="text-2xl font-bold">Loading job details...</p>
-        </div>
-        <Footer />
-      </main>
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading job details...</p>
+      </div>
+    );
+  }
+
+  if (error || !job) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-center">
+        <p className="text-red-500">{error || "Job not found"}</p>
+      </div>
     );
   }
 
   return (
-    <main className="bg-[#f4efe6] min-h-screen text-[#111]">
+    <main className="bg-[#f4efe6] text-[#111111] min-h-screen">
       <Header />
 
       <section className="max-w-[900px] mx-auto px-6 py-12">
-        <h1 className="text-5xl font-black">{job.title}</h1>
-        <p className="mt-2 text-sm text-black/60">
-          {job.createdBy?.name || "Qvonxpert Network"} – {job.location || "Remote"}
-        </p>
+        <div className="border border-black bg-white p-10 space-y-6">
+          <h1 className="text-5xl font-black">{job.title}</h1>
+          <p className="text-sm text-black/60">{job.createdBy.name || "Qvonxpert Network"}</p>
 
-        <div className="mt-6">
-          <h2 className="text-2xl font-bold">Job Description</h2>
-          <p className="mt-4 text-base leading-7">{job.description}</p>
-        </div>
-
-        {job.skills?.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-xl font-bold">Required Skills</h3>
-            <div className="flex flex-wrap gap-3 mt-2">
-              {job.skills.map((skill, i) => (
-                <span
-                  key={i}
-                  className="px-4 py-2 border border-black text-xs uppercase font-bold"
-                >
-                  {skill}
-                </span>
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-3 mt-4">
+            <span className="border border-black px-4 py-2 text-xs uppercase">{job.location}</span>
+            {job.jobType.map((type, i) => (
+              <span key={i} className="border border-black px-4 py-2 text-xs uppercase">{type}</span>
+            ))}
           </div>
-        )}
 
-        <div className="mt-10 border-t pt-10">
-          <h2 className="text-3xl font-black mb-6">Apply Now</h2>
+          <div className="mt-6 text-base leading-7 text-black/70">
+            <p>{job.description}</p>
+          </div>
 
-          <textarea
-            value={coverLetter}
-            onChange={(e) => setCoverLetter(e.target.value)}
-            placeholder="Write your cover letter here..."
-            className="w-full p-4 border border-black rounded mb-4 min-h-[150px] resize-none"
-            disabled={isApplied}
-          />
-
-          <input
-            type="file"
-            accept=".pdf,.doc,.docx"
-            onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
-            className="mb-4"
-            disabled={isApplied}
-          />
+          <div className="flex flex-wrap gap-3 mt-6">
+            {job.tags.map((tag, i) => (
+              <span key={i} className="text-xs uppercase border border-black px-4 py-2">{tag}</span>
+            ))}
+          </div>
 
           <button
             onClick={handleApply}
-            disabled={isApplied || loading}
-            className={`px-6 py-4 uppercase font-bold tracking-[0.1em] transition ${
-              isApplied
-                ? "bg-green-500 text-white cursor-not-allowed"
-                : "bg-black text-white hover:bg-green-500 hover:text-black"
+            disabled={applied}
+            className={`mt-10 h-[64px] w-full border border-black uppercase tracking-[0.2em] text-sm font-black transition flex items-center justify-center gap-3 ${
+              applied ? "bg-[#d9ff65] cursor-not-allowed" : "bg-black text-white hover:bg-[#d9ff65] hover:text-black"
             }`}
           >
-            {isApplied ? "Application Sent" : loading ? "Submitting..." : "Submit Application"}
+            {applied ? "Application Sent" : "Apply Now"}
+            <ArrowUpRight size={18} />
           </button>
         </div>
       </section>
