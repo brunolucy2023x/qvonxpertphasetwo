@@ -3,6 +3,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Header from "@/Components/Header";
 import Footer from "@/Components/Footer";
+
+
+
+import Link from "next/link";
+
+
+
+
 import Filters from "@/Components/Filters";
 import JobCard from "@/Components/JobItem/JobCard";
 import { supabase } from "@/lib/supabase";
@@ -461,18 +469,37 @@ export default function Page() {
                             </h4>
                           </div>
 
-                          <button
-                            onClick={() => applyJob(job._id)}
-                            className={`h-[64px] w-full border border-black uppercase tracking-[0.2em] text-sm font-black transition flex items-center justify-center gap-3 ${
-                              isApplied
-                                ? "bg-[#d9ff65]"
-                                : "bg-black text-white hover:bg-[#d9ff65] hover:text-black"
-                            }`}
-                          >
-                            {isApplied ? "Application Sent" : "Apply Now"}
 
-                            <ArrowUpRight size={18} />
-                          </button>
+
+
+
+                          
+{isApplied ? (
+  <button
+    className="h-[64px] w-full border border-black uppercase tracking-[0.2em] text-sm font-black bg-[#d9ff65] flex items-center justify-center gap-3 cursor-not-allowed"
+    disabled
+  >
+    Application Sent
+    <ArrowUpRight size={18} />
+  </button>
+) : (
+  <Link
+    href={`/apply-now/${job._id}`}
+    className="h-[64px] w-full border border-black uppercase tracking-[0.2em] text-sm font-black bg-black text-white hover:bg-[#d9ff65] hover:text-black flex items-center justify-center gap-3 transition"
+  >
+    Apply Now
+    <ArrowUpRight size={18} />
+  </Link>
+)}
+
+
+
+
+
+
+
+
+                          
                         </div>
                       </div>
                     </div>
