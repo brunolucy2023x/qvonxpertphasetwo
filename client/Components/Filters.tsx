@@ -39,9 +39,10 @@ function Filters() {
     setSearchQuery,
   } = jobsContext;
 
-  /* =========================
-     CLEAR FILTERS
-  ========================= */
+  /* =========================================
+      CLEAR FILTERS
+  ========================================= */
+
   const clearAllFilters = () => {
     setFilters(defaultFilters);
 
@@ -55,9 +56,10 @@ function Filters() {
     setMaxSalary(200000);
   };
 
-  /* =========================
-     SALARY HANDLERS
-  ========================= */
+  /* =========================================
+      SALARY HANDLERS
+  ========================================= */
+
   const handleMinSalaryChange = (value: number[]) => {
     const min = value[0];
 
@@ -78,9 +80,10 @@ function Filters() {
     }
   };
 
-  /* =========================
-     FILTER ITEM COMPONENT
-  ========================= */
+  /* =========================================
+      FILTER ITEM
+  ========================================= */
+
   const FilterItem = ({
     id,
     label,
@@ -88,38 +91,70 @@ function Filters() {
     id: keyof typeof defaultFilters;
     label: string;
   }) => (
-    <div className="flex items-center space-x-2">
-      <Checkbox
-        id={id}
-        checked={filters?.[id] ?? false}
-        onCheckedChange={() => handleFilterChange(id)}
-      />
+    <label
+      htmlFor={id}
+      className="group flex items-center justify-between border border-black px-4 py-4 cursor-pointer hover:bg-black hover:text-white transition-all duration-200"
+    >
+      <div className="flex items-center gap-3">
+        <Checkbox
+          id={id}
+          checked={filters?.[id] ?? false}
+          onCheckedChange={() => handleFilterChange(id)}
+          className="border-black data-[state=checked]:bg-black data-[state=checked]:text-white"
+        />
 
-      <Label htmlFor={id}>{label}</Label>
-    </div>
+        <span className="text-sm uppercase tracking-[0.15em] font-bold">
+          {label}
+        </span>
+      </div>
+    </label>
   );
 
   return (
-    <div className="w-[22rem] pr-4 space-y-6">
+    <div className="w-full space-y-10 overflow-hidden">
+      {/* =========================================
+          HEADER
+      ========================================= */}
 
-      {/* ================= JOB TYPE ================= */}
-      <div>
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Job Type</h2>
+      <div className="border border-black bg-[#d9ff65]">
+        <div className="p-5 border-b border-black">
+          <p className="text-xs uppercase tracking-[0.3em] font-black">
+            Qvonxpert Filters
+          </p>
 
+          <h2 className="mt-3 text-3xl font-black uppercase leading-none">
+            Refine
+            <br />
+            Results
+          </h2>
+        </div>
+
+        <div className="p-5">
           <Button
             variant="ghost"
-            className="text-red-500 hover:text-red-700"
             onClick={() => {
               clearAllFilters();
               searchJobs();
             }}
+            className="w-full h-[56px] border border-black bg-black text-white rounded-none uppercase tracking-[0.2em] text-xs font-black hover:bg-white hover:text-black transition-all"
           >
-            Clear All
+            Clear All Filters
           </Button>
         </div>
+      </div>
 
-        <div className="space-y-3 mt-4">
+      {/* =========================================
+          JOB TYPE
+      ========================================= */}
+
+      <div className="border border-black bg-white">
+        <div className="border-b border-black px-5 py-4">
+          <h3 className="text-lg font-black uppercase tracking-[0.15em]">
+            Job Type
+          </h3>
+        </div>
+
+        <div className="p-5 space-y-3">
           <FilterItem id="fullTime" label="Full Time" />
           <FilterItem id="partTime" label="Part Time" />
           <FilterItem id="contract" label="Contract" />
@@ -127,59 +162,98 @@ function Filters() {
         </div>
       </div>
 
-      {/* ================= TAGS ================= */}
-      <div>
-        <h2 className="text-lg font-semibold">Tags</h2>
+      {/* =========================================
+          SKILLS
+      ========================================= */}
 
-        <div className="space-y-3 mt-4">
+      <div className="border border-black bg-[#efe7da]">
+        <div className="border-b border-black px-5 py-4">
+          <h3 className="text-lg font-black uppercase tracking-[0.15em]">
+            Categories
+          </h3>
+        </div>
+
+        <div className="p-5 space-y-3">
           <FilterItem id="fullStack" label="Full Stack" />
           <FilterItem id="backend" label="Backend" />
           <FilterItem id="devOps" label="DevOps" />
-          <FilterItem id="uiUx" label="UI/UX" />
+          <FilterItem id="uiUx" label="UI / UX" />
         </div>
       </div>
 
-      {/* ================= SALARY ================= */}
-      <div>
-        <h2 className="text-lg font-semibold">Salary Range</h2>
+      {/* =========================================
+          SALARY
+      ========================================= */}
 
-        <div className="flex flex-col gap-4 mt-4">
+      <div className="border border-black bg-white overflow-hidden">
+        <div className="border-b border-black px-5 py-4">
+          <h3 className="text-lg font-black uppercase tracking-[0.15em]">
+            Salary Range
+          </h3>
+        </div>
 
-          <div>
-            <Label>Minimum Salary</Label>
-
-            <Slider
-              min={0}
-              max={200000}
-              step={100}
-              value={[minSalary ?? 0]}
-              onValueChange={handleMinSalaryChange}
-            />
-
-            <span className="text-sm text-gray-500">
-              {formatMoney(minSalary ?? 0, "GBP")}
-            </span>
-          </div>
+        <div className="p-5 space-y-8">
+          {/* MIN */}
 
           <div>
-            <Label>Maximum Salary</Label>
+            <div className="flex items-center justify-between mb-4">
+              <Label className="uppercase tracking-[0.15em] text-xs font-black">
+                Minimum Salary
+              </Label>
 
-            <Slider
-              min={0}
-              max={200000}
-              step={100}
-              value={[maxSalary ?? 200000]}
-              onValueChange={handleMaxSalaryChange}
-            />
+              <span className="text-sm font-bold border border-black px-3 py-1">
+                {formatMoney(minSalary ?? 0, "GBP")}
+              </span>
+            </div>
 
-            <span className="text-sm text-gray-500">
-              {formatMoney(maxSalary ?? 200000, "GBP")}
-            </span>
+            <div className="border border-black px-4 py-6">
+              <Slider
+                min={0}
+                max={200000}
+                step={100}
+                value={[minSalary ?? 0]}
+                onValueChange={handleMinSalaryChange}
+              />
+            </div>
           </div>
 
+          {/* MAX */}
+
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <Label className="uppercase tracking-[0.15em] text-xs font-black">
+                Maximum Salary
+              </Label>
+
+              <span className="text-sm font-bold border border-black px-3 py-1">
+                {formatMoney(maxSalary ?? 200000, "GBP")}
+              </span>
+            </div>
+
+            <div className="border border-black px-4 py-6">
+              <Slider
+                min={0}
+                max={200000}
+                step={100}
+                value={[maxSalary ?? 200000]}
+                onValueChange={handleMaxSalaryChange}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* =========================================
+          FOOTER NOTE
+      ========================================= */}
+
+      <div className="border border-black bg-black text-white p-5">
+        <p className="text-xs uppercase tracking-[0.2em] leading-7">
+          Qvonxpert helps professionals discover modern opportunities across
+          technology, design, marketing, engineering, and innovation-driven
+          industries.
+        </p>
+      </div>
     </div>
   );
 }
