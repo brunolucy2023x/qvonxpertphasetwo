@@ -16,12 +16,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <ClerkProvider
-      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!} // use publishableKey instead of frontendApi
-      navigate={(to: string) => {
-        if (typeof window !== "undefined") {
-          window.history.pushState(null, "", to);
-        }
-      }}
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!} // ✅ use publishableKey
     >
       <html lang="en">
         <head>
